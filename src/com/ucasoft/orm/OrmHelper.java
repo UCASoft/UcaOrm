@@ -11,7 +11,8 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public abstract class OrmHelper extends SQLiteOpenHelper implements OrmUtils.DefaultValues {
 
-    public abstract void onCreate();
+    protected abstract void onCreate();
+    protected abstract void onUpgrade(int oldVersion, int newVersion);
 
     public OrmHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -31,6 +32,7 @@ public abstract class OrmHelper extends SQLiteOpenHelper implements OrmUtils.Def
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        OrmFactory.setDatabase(database);
+        onUpgrade(oldVersion, newVersion);
     }
 }

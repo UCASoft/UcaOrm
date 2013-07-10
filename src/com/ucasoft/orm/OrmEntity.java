@@ -3,7 +3,7 @@ package com.ucasoft.orm;
 import com.ucasoft.orm.exceptions.*;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by UCASoft with IntelliJ IDEA.
@@ -13,16 +13,15 @@ import java.util.ArrayList;
  */
 public class OrmEntity {
 
-    protected static <T extends OrmEntity> ArrayList<T> getAllEntities(Class<T> entityClass) throws IllegalAccessException, NotFindTableAnnotation, NotFindPrimaryKeyField, WrongListReference, InstantiationException, WrongRightJoinReference, NoSuchMethodException, InvocationTargetException, DiscrepancyMappingColumns {
+    protected static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws IllegalAccessException, NotFindTableAnnotation, NotFindPrimaryKeyField, WrongListReference, InstantiationException, WrongRightJoinReference, NoSuchMethodException, InvocationTargetException, DiscrepancyMappingColumns {
         return OrmUtils.getAllEntities(entityClass);
     }
 
-    public boolean insert() {
-        try {
+    public boolean alter() throws WrongListReference, WrongRightJoinReference, IllegalAccessException, NotFindTableAnnotation {
             return OrmUtils.alter(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
         }
+
+    public boolean delete() throws IllegalAccessException, WrongRightJoinReference, NotFindPrimaryKeyField, NotFindTableAnnotation {
+        return OrmUtils.delete(this);
     }
 }

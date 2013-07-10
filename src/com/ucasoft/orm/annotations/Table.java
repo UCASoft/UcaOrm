@@ -19,6 +19,8 @@ public @interface Table {
 
     public String name() default "";
 
+    public boolean cashedList() default false;
+
     Class<? extends OrmEntity> leftJoinTo() default OrmEntity.class;
 
     Class<? extends OrmEntity>[] rightJoinTo() default {};

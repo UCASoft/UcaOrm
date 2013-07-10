@@ -20,4 +20,6 @@ public @interface Column {
     public boolean primaryKey() default false;
 
     public boolean inherited() default false;
+
+    public ReferenceAction onDelete() default ReferenceAction.NoAction;
 }
