@@ -21,14 +21,14 @@ public class OrmFieldWorker {
 
     static class ClassFieldsInfo {
 
-        Field primaryKey;
-        List<Field> fieldsWithoutKey;
-        List<Field> foreignFields;
+        OrmField primaryKey;
+        List<OrmField> fieldsWithoutKey;
+        List<OrmField> foreignFields;
     }
 
     private static HashMap<Class<? extends OrmEntity>, ClassFieldsInfo> hashedClassesInfo = new HashMap<Class<? extends OrmEntity>, ClassFieldsInfo>();
 
-    static Field getPrimaryKeyField(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference {
+    static OrmField getPrimaryKeyField(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference {
         if (!hashedClassesInfo.containsKey(entityClass)){
             ClassFieldsInfo classFieldsInfo = new ClassFieldsInfo();
             classFieldsInfo.primaryKey = getPrimaryKeyField(entityClass, OrmTableWorker.getTableJoinLeftClass(entityClass));
@@ -41,12 +41,15 @@ public class OrmFieldWorker {
         return hashedClassesInfo.get(entityClass).primaryKey;
     }
 
-    private static Field getPrimaryKeyField(Class entityClass, Class<? extends OrmEntity> joinTo) {
+    private static OrmField getPrimaryKeyField(Class entityClass, Class<? extends OrmEntity> joinTo) {
+        if (joinTo != null){
+            return new OrmField(joinTo, null);
+        }
         if (!entityClass.equals(joinTo)) {
             for (Field field : entityClass.getDeclaredFields()) {
                 Column columnAnnotation = field.getAnnotation(Column.class);
                 if (columnAnnotation != null && columnAnnotation.primaryKey())
-                    return field;
+                    return new OrmField(field);
             }
         }
         if (OrmEntity.class.isAssignableFrom(entityClass.getSuperclass()))
@@ -54,38 +57,39 @@ public class OrmFieldWorker {
         return null;
     }
 
-    static List<Field> getAnnotationFieldsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass) throws WrongListReference, WrongRightJoinReference, NotFindTableAnnotation {
+    static List<OrmField> getAnnotationFieldsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass) throws WrongListReference, WrongRightJoinReference, NotFindTableAnnotation {
         if (!hashedClassesInfo.containsKey(entityClass)){
             ClassFieldsInfo fieldsInfo = new ClassFieldsInfo();
-            fieldsInfo.fieldsWithoutKey = getClassAnnotationFieldsWithOutPrimaryKey(entityClass, OrmTableWorker.getTableJoinLeftClass(entityClass), new ArrayList<Field>(), 0);
+            fieldsInfo.fieldsWithoutKey = getClassAnnotationFieldsWithOutPrimaryKey(entityClass, OrmTableWorker.getTableJoinLeftClass(entityClass), new ArrayList<OrmField>(), 0);
             hashedClassesInfo.put(entityClass, fieldsInfo);
         } else {
             ClassFieldsInfo fieldsInfo = hashedClassesInfo.get(entityClass);
             if (fieldsInfo.fieldsWithoutKey == null)
-                fieldsInfo.fieldsWithoutKey = getClassAnnotationFieldsWithOutPrimaryKey(entityClass, OrmTableWorker.getTableJoinLeftClass(entityClass), new ArrayList<Field>(), 0);
+                fieldsInfo.fieldsWithoutKey = getClassAnnotationFieldsWithOutPrimaryKey(entityClass, OrmTableWorker.getTableJoinLeftClass(entityClass), new ArrayList<OrmField>(), 0);
         }
         return hashedClassesInfo.get(entityClass).fieldsWithoutKey;
     }
 
-    private static List<Field> getClassAnnotationFieldsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass, Class<? extends OrmEntity> jointTo, List<Field> allFields, int level) throws WrongListReference {
-        ArrayList<Field> classFields = new ArrayList<Field>();
+    private static List<OrmField> getClassAnnotationFieldsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass, Class<? extends OrmEntity> jointTo, List<OrmField> allFields, int level) throws WrongListReference {
+        ArrayList<OrmField> classFields = new ArrayList<OrmField>();
         if (!entityClass.equals(jointTo)){
             for (Field field : entityClass.getDeclaredFields()){
                 Column columnAnnotation = field.getAnnotation(Column.class);
                 if (columnAnnotation != null && (level == 0 || columnAnnotation.inherited()) && !columnAnnotation.primaryKey()){
                     if (!checkForeign(entityClass, field))
-                        classFields.add(field);
-                }
+                        classFields.add(new OrmField(field));
             }
         }
-        List<Field> fields = concatFields(allFields, classFields);
+            List<OrmField> fields = concatFields(allFields, classFields);
         Class superClass = entityClass.getSuperclass();
         if (OrmEntity.class.isAssignableFrom(superClass))
             return getClassAnnotationFieldsWithOutPrimaryKey(superClass, jointTo, fields, level + 1);
         return fields;
     }
+        return allFields;
+    }
 
-    private static List<Field> concatFields(List<Field> allFields, List<Field> classFields) {
+    private static List<OrmField> concatFields(List<OrmField> allFields, List<OrmField> classFields) {
         if (classFields.size() == 0)
             return allFields;
         else  {
@@ -94,7 +98,7 @@ public class OrmFieldWorker {
         }
     }
 
-    static List<Field> getForeignFields(Class<? extends OrmEntity> entityClass) throws WrongListReference {
+    static List<OrmField> getForeignFields(Class<? extends OrmEntity> entityClass) throws WrongListReference {
         if (!hashedClassesInfo.containsKey(entityClass)){
             ClassFieldsInfo fieldsInfo = new ClassFieldsInfo();
             fieldsInfo.foreignFields = getForeign(entityClass);
@@ -107,11 +111,11 @@ public class OrmFieldWorker {
         return hashedClassesInfo.get(entityClass).foreignFields;
     }
 
-    private static List<Field> getForeign(Class<? extends OrmEntity> entityClass) throws WrongListReference {
-        ArrayList<Field> result = new ArrayList<Field>();
+    private static List<OrmField> getForeign(Class<? extends OrmEntity> entityClass) throws WrongListReference {
+        ArrayList<OrmField> result = new ArrayList<OrmField>();
         for (Field field : entityClass.getDeclaredFields()){
             if (checkForeign(entityClass, field))
-                result.add(field);
+                result.add(new OrmField(field));
         }
         return result;
     }
@@ -137,8 +141,8 @@ public class OrmFieldWorker {
         return false;
     }
 
-    static List<Field> getAllAnnotationFields(Class<? extends OrmEntity> entityClass) throws WrongRightJoinReference, NotFindTableAnnotation, WrongListReference {
-        ArrayList<Field> result = new ArrayList<Field>();
+    static List<OrmField> getAllAnnotationFields(Class<? extends OrmEntity> entityClass) throws WrongRightJoinReference, NotFindTableAnnotation, WrongListReference {
+        ArrayList<OrmField> result = new ArrayList<OrmField>();
         result.add(getPrimaryKeyField(entityClass));
         result.addAll(getAnnotationFieldsWithOutPrimaryKey(entityClass));
         return result;

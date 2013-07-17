@@ -1,8 +1,7 @@
 package com.ucasoft.orm.exceptions;
 
 import com.ucasoft.orm.OrmEntity;
-
-import java.lang.reflect.Field;
+import com.ucasoft.orm.OrmField;
 
 /**
  * Created by UCASoft with IntelliJ IDEA.
@@ -11,7 +10,7 @@ import java.lang.reflect.Field;
  * Time: 12:33
  */
 public class DiscrepancyMappingColumns extends Exception {
-    public DiscrepancyMappingColumns(Class<? extends OrmEntity> entityClass, Field field) {
+    public DiscrepancyMappingColumns(Class<? extends OrmEntity> entityClass, OrmField field) {
         super(String.format("Field %s in class %s not find in relational model! Maybe you need to update the database.", entityClass.getSimpleName(), field.getName()));
     }
 }

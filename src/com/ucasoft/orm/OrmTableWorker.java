@@ -4,7 +4,9 @@ import com.ucasoft.orm.annotations.Table;
 import com.ucasoft.orm.exceptions.NotFindTableAnnotation;
 import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by UCASoft with IntelliJ IDEA.
@@ -55,6 +57,15 @@ import java.util.HashMap;
             return leftClass;
         }
         return null;
+    }
+
+    static List<Class<? extends OrmEntity>> getRightJoinClasses(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation { //TODO Надо закешировать!!
+        Table tableAnnotation = entityClass.getAnnotation(Table.class);
+        if (tableAnnotation == null)
+            throw new NotFindTableAnnotation(entityClass);
+        List<Class<? extends OrmEntity>> rightJoins = Arrays.asList(tableAnnotation.rightJoinTo());
+        //TODO Проверку, чтобы у все классов в RightJoin в Table аннотации был entityClass в LeftJoin!!!
+        return rightJoins;
     }
 
     static String getTableName(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation {
