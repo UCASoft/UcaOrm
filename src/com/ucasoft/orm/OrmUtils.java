@@ -204,7 +204,7 @@ public class OrmUtils {
         return getEntities(entityClass, where, params, false);
     }
 
-    public interface DefaultValues {
+    interface DefaultValues{
         void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList);
     }
 
@@ -221,15 +221,15 @@ public class OrmUtils {
         InsertDefaultValues(entityClass);
     }
 
-    public static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
+    static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
         return getEntities(entityClass, null, null, false);
     }
 
-    public static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
+    static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
         return getEntities(entityClass, null, null, includeLeftChild);
     }
 
-    public static <T extends OrmEntity> List<T> getEntities(Class<T> entityClass, String where, String[] params, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
+    static <T extends OrmEntity> List<T> getEntities(Class<T> entityClass, String where, String[] params, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
         ArrayList<T> result = new ArrayList<T>();
         boolean cashed = OrmTableWorker.isCashed(entityClass);
         List<Class<? extends OrmEntity>> rightToClasses = OrmTableWorker.getTableRightJoinClasses(entityClass);

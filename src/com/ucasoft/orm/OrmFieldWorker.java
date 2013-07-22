@@ -17,7 +17,7 @@ import java.util.List;
  * Date: 10.07.13
  * Time: 15:37
  */
-public class OrmFieldWorker {
+class OrmFieldWorker {
 
     static class ClassFieldsInfo {
 

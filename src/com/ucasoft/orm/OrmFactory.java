@@ -16,11 +16,11 @@ public class OrmFactory {
     private static OrmHelper ormHelper;
     private static SQLiteDatabase database;
 
-    public static OrmHelper getHelper() {
+    static OrmHelper getHelper() {
         return ormHelper;
     }
 
-    public static SQLiteDatabase getDatabase() {
+    static SQLiteDatabase getDatabase() {
         return database;
     }
 
@@ -49,7 +49,7 @@ public class OrmFactory {
         ormHelper = null;
     }
 
-    public static void setDatabase(SQLiteDatabase database) {
+    static void setDatabase(SQLiteDatabase database) {
         OrmFactory.database = database;
     }
 }

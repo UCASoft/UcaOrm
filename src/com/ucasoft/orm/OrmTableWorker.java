@@ -15,7 +15,7 @@ import java.util.List;
  * Date:
  * Time: 15:40
  */
- public class OrmTableWorker {
+class OrmTableWorker {
 
     static class TableInfo {
 

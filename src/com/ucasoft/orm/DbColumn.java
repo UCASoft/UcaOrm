@@ -6,7 +6,7 @@ package com.ucasoft.orm;
  * Date: 30.06.13
  * Time: 13:08
  */
-public class DbColumn {
+class DbColumn {
 
     private String name;
 

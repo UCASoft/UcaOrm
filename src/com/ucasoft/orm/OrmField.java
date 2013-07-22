@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
  * Date: 12.07.13
  * Time: 13:09
  */
-public class OrmField {
+public final class OrmField {
 
     private Field field;
     private Class<? extends OrmEntity> leftJoin;
