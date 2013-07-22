@@ -13,16 +13,15 @@ import java.util.List;
  */
 public abstract class OrmEntity {
 
-    @Deprecated
-    protected static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws IllegalAccessException, NotFindTableAnnotation, NotFindPrimaryKeyField, WrongListReference, InstantiationException, WrongRightJoinReference, NoSuchMethodException, InvocationTargetException, DiscrepancyMappingColumns {
-        return OrmUtils.getAllEntities(entityClass);
+    protected static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference, WrongJoinLeftReference {
+        return getAllEntities(entityClass, false);
     }
 
-    public static <T extends OrmEntity> List<T> getAllEntitiesEx(Class<T> entityClass, boolean includeLeftChild) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference, WrongJoinLeftReference {
-        return OrmUtils.getAllEntitiesEx(entityClass, includeLeftChild);
+    protected static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass, boolean includeLeftChild) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference, WrongJoinLeftReference {
+        return OrmUtils.getAllEntities(entityClass, includeLeftChild);
     }
 
-    public static OrmWhere Where(Class<? extends OrmEntity> entityClass){
+    protected static OrmWhere Where(Class<? extends OrmEntity> entityClass){
         return new OrmWhere(entityClass);
     }
 

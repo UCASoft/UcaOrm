@@ -11,6 +11,6 @@ import com.ucasoft.orm.OrmField;
  */
 public class DiscrepancyMappingColumns extends Exception {
     public DiscrepancyMappingColumns(Class<? extends OrmEntity> entityClass, OrmField field) {
-        super(String.format("Field %s in class %s not find in relational model! Maybe you need to update the database.", entityClass.getSimpleName(), field.getName()));
+        super(String.format("Field %s in class %s not find in relational model! Maybe you need to update the database.", field.getName(), entityClass.getSimpleName()));
     }
 }

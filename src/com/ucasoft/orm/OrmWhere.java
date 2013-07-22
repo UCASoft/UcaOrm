@@ -30,42 +30,23 @@ public class OrmWhere {
         return this;
     }
 
-    @Deprecated
-    private <T extends OrmEntity> List<T> Select(Class<T> entityClass) throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
+    private <T extends OrmEntity> List<T> Select(Class<T> entityClass) throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference, WrongListReference {
         return OrmUtils.getEntitiesWhere(entityClass, where, params.toArray(new String[params.size()]));
     }
 
-    private <T extends OrmEntity> List<T> SelectEx(Class<T> entityClass) throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference, WrongListReference {
-        return OrmUtils.getEntitiesWhereEx(entityClass, where, params.toArray(new String[params.size()]));
-    }
-
-    @Deprecated
-    public <T extends OrmEntity> List<T> Select() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
+    public <T extends OrmEntity> List<T> Select() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference {
         return (List<T>) Select(entityClass);
     }
 
-    @Deprecated
-    private <T extends OrmEntity> T SelectFirst(Class<T> entityClass) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
+    private <T extends OrmEntity> T SelectFirst(Class<T> entityClass) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
         List<T> result = Select(entityClass);
         if (result.size() > 0)
             return result.get(0);
         return null;
     }
 
-    private <T extends OrmEntity> T SelectFirstEx(Class<T> entityClass) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
-        List<T> result = SelectEx(entityClass);
-        if (result.size() > 0)
-            return result.get(0);
-        return null;
-    }
-
-    @Deprecated
-    public <T extends OrmEntity> T SelectFirst() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
+    public <T extends OrmEntity> T SelectFirst() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference, WrongListReference {
         return (T) SelectFirst(entityClass);
-    }
-
-    public <T extends OrmEntity> T SelectFirstEx() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference, WrongListReference {
-        return (T) SelectFirstEx(entityClass);
     }
 
     public OrmWhere And() {

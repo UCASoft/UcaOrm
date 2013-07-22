@@ -29,6 +29,13 @@ public class OrmFieldWorker {
 
     private static HashMap<Class<? extends OrmEntity>, ClassFieldsInfo> hashedClassesInfo = new HashMap<Class<? extends OrmEntity>, ClassFieldsInfo>();
 
+    static OrmField getPrimaryKeyField(Class<? extends OrmEntity> entityClass, boolean setAccessible) throws WrongRightJoinReference, NotFindTableAnnotation {
+        OrmField field = getPrimaryKeyField(entityClass);
+        if (setAccessible) // Special check true, don't do just field.setAccessible(setAccessible);
+            field.setAccessible(true);
+        return field;
+    }
+
     static OrmField getPrimaryKeyField(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference {
         if (!hashedClassesInfo.containsKey(entityClass)){
             ClassFieldsInfo classFieldsInfo = new ClassFieldsInfo();
