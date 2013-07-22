@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -86,7 +87,7 @@ public class OrmUtils {
                 }
             }
             else
-                id = database.insert(OrmTableWorker.getTableName(entityClass), "", getContentValues(entity, joinLeftClass));
+                id = database.insert(OrmTableWorker.getTableName(entityClass), "", getContentValues(entity));
             if (id > 0) {
                 primaryKeyField.set(entity, id);
                 if (OrmTableWorker.isCashed(entityClass))
@@ -111,11 +112,15 @@ public class OrmUtils {
                 for(OrmEntity entityItem : (List<OrmEntity>)field.get(entity)){
                     result = alter(entityItem, database);
                     if (!result)
-                        return result;
+                        return false;
                 }
             }
         }
         return result;
+    }
+
+    private static ContentValues getContentValues(OrmEntity entity) throws IllegalAccessException, WrongRightJoinReference, WrongListReference, NotFindTableAnnotation {
+        return getContentValues(entity, null);
     }
 
     private static ContentValues getContentValues(OrmEntity entity, Class<? extends OrmEntity> joinLeftClass) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference, IllegalAccessException {
@@ -130,9 +135,11 @@ public class OrmUtils {
             String columnName = getColumnName(field);
             if (checkReference(field)) {
                 OrmEntity referenceEntity = (OrmEntity) field.get(entity);
+                if (referenceEntity != null){
                 OrmField primaryKeyField = OrmFieldWorker.getPrimaryKeyField(referenceEntity.getClass());
                 primaryKeyField.setAccessible(true);
                 values.put(columnName, (Long) primaryKeyField.get(referenceEntity));
+            }
             }
             else{
                 String fieldType = field.getType().getSimpleName().toUpperCase();
@@ -140,6 +147,8 @@ public class OrmUtils {
                     values.put(columnName, field.getInt(entity));
                 else if (fieldType.equals("LONG"))
                     values.put(columnName, (Long) field.get(entity));
+                else if (fieldType.equals("DATE"))
+                    values.put(columnName, ((Date)field.get(entity)).getTime());
                 else if (fieldType.equals("STRING"))
                     values.put(columnName, (String) field.get(entity));
                 else if (fieldType.equals("DOUBLE"))
@@ -170,6 +179,10 @@ public class OrmUtils {
         }
     }
 
+    static <T extends OrmEntity> List<T> getEntitiesWhereEx(Class<T> entityClass, String where, String[] params) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
+        return getEntitiesEx(entityClass, where, params, false);
+    }
+
     public interface DefaultValues {
         void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList);
     }
@@ -187,22 +200,38 @@ public class OrmUtils {
         InsertDefaultValues(entityClass);
     }
 
+    @Deprecated
     static <T extends OrmEntity> List<T> getEntitiesWhere(Class<T> entityClass, String where, String[] args) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
         return getEntities(entityClass, where, args);
     }
 
+    @Deprecated
     static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongListReference, WrongRightJoinReference, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, DiscrepancyMappingColumns {
         return getEntities(entityClass, "", null);
     }
 
-    public static <T extends OrmEntity> List<T> getAllEntitiesEx(Class<T> entityClass, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException {
+    public static <T extends OrmEntity> List<T> getAllEntitiesEx(Class<T> entityClass, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
+        return getEntitiesEx(entityClass, null, null, includeLeftChild);
+    }
+
+    //TODO Необходимо добавить поддержку Cashed List'ов!
+    public static <T extends OrmEntity> List<T> getEntitiesEx(Class<T> entityClass, String where, String[] params, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
         ArrayList<T> result = new ArrayList<T>();
-        List<Class<? extends OrmEntity>> rightToClasses = OrmTableWorker.getRightJoinClasses(entityClass);
+        List<Class<? extends OrmEntity>> rightToClasses = OrmTableWorker.getTableRightJoinClasses(entityClass);
+        Class<? extends OrmEntity> joinLeftClass = OrmTableWorker.getTableJoinLeftClass(entityClass);
         String sql = "SELECT * FROM " + OrmTableWorker.getTableName(entityClass);
+        if (joinLeftClass != null) {
+            sql += " LEFT JOIN " + OrmTableWorker.getTableName(joinLeftClass) + " ON " + OrmFieldWorker.getPrimaryKeyField(entityClass).getName() + " = " + OrmFieldWorker.getPrimaryKeyField(joinLeftClass).getName();
+        }
+        if (where != null){
+            sql += String.format(" WHERE " + where.replace("?", "%s"), params).replace("[", "").replace("]", "");
+        }
         if (rightToClasses.size() > 0){
-            String notExists = " WHERE ";
+            String notExists = null;
+            if (where == null)
+                notExists = " WHERE ";
             for (Class<? extends OrmEntity> rightEntityClass : rightToClasses){
-                if (!notExists.equals(" WHERE "))
+                if (notExists != null && !notExists.equals(" WHERE "))
                     notExists += "AND ";
                 notExists += "NOT EXISTS(SELECT 1 FROM " + OrmTableWorker.getTableName(rightEntityClass) + " WHERE " + OrmFieldWorker.getPrimaryKeyField(rightEntityClass).getName() + " = " + OrmFieldWorker.getPrimaryKeyField(entityClass).getName() + ") ";
             }
@@ -229,6 +258,10 @@ public class OrmUtils {
         return result;
     }
 
+    /**
+     * @deprecated Will be delete when {@link #getEntitiesEx(Class, String, String[], boolean)} is create completed
+     */
+    @Deprecated
     private static <T extends OrmEntity> List<T> getEntities(Class<T> entityClass, String where, String[] args) throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns {
         ArrayList<T> result;
         boolean cashed = OrmTableWorker.isCashed(entityClass);
@@ -387,6 +420,8 @@ public class OrmUtils {
             return cursor.getInt(cursorIndex);
         else if (fieldType.equals("LONG"))
             return cursor.getLong(cursorIndex);
+        else if (fieldType.equals("DATE"))
+            return new Date(cursor.getLong(cursorIndex));
         else if (fieldType.equals("STRING"))
             return cursor.getString(cursorIndex);
         else if (fieldType.equals("DOUBLE"))
@@ -458,7 +493,7 @@ public class OrmUtils {
     private static String getColumnType(OrmField field) throws NotFindPrimaryKeyField, NotFindTableAnnotation {
         Class type = field.getType();
         String fieldType = type.getSimpleName().toUpperCase();
-        if (fieldType.equals("INT") || fieldType.equals("LONG") || checkReference(field))
+        if (fieldType.equals("INT") || fieldType.equals("LONG") || fieldType.equals("DATE") || checkReference(field))
             return "INTEGER";
         else if (fieldType.equals("STRING") || fieldType.equals("DOCUMENT"))
             return "TEXT";

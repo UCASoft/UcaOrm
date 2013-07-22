@@ -2,6 +2,7 @@ package com.ucasoft.orm;
 
 import com.ucasoft.orm.annotations.Table;
 import com.ucasoft.orm.exceptions.NotFindTableAnnotation;
+import com.ucasoft.orm.exceptions.WrongJoinLeftReference;
 import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
 import java.util.Arrays;
@@ -19,6 +20,8 @@ import java.util.List;
     static class TableInfo {
 
         Class<? extends OrmEntity> joinLeftClass;
+
+        List<Class<? extends OrmEntity>> rightJoinClasses;
     }
 
     private static HashMap<Class<? extends OrmEntity>, TableInfo> hashedTableInfo = new HashMap<Class<? extends OrmEntity>, TableInfo>();
@@ -59,12 +62,28 @@ import java.util.List;
         return null;
     }
 
-    static List<Class<? extends OrmEntity>> getRightJoinClasses(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation { //TODO Надо закешировать!!
+    static List<Class<? extends OrmEntity>> getTableRightJoinClasses(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference, WrongJoinLeftReference {
+        if (!hashedTableInfo.containsKey(entityClass)) {
+            TableInfo tableInfo = new TableInfo();
+            tableInfo.rightJoinClasses = getRightJoinClasses(entityClass);
+            hashedTableInfo.put(entityClass, tableInfo);
+        } else {
+            TableInfo tableInfo = hashedTableInfo.get(entityClass);
+            if (tableInfo.rightJoinClasses == null)
+                tableInfo.rightJoinClasses = getRightJoinClasses(entityClass);
+        }
+        return hashedTableInfo.get(entityClass).rightJoinClasses;
+    }
+
+    private static List<Class<? extends OrmEntity>> getRightJoinClasses(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference, WrongJoinLeftReference {
         Table tableAnnotation = entityClass.getAnnotation(Table.class);
         if (tableAnnotation == null)
             throw new NotFindTableAnnotation(entityClass);
         List<Class<? extends OrmEntity>> rightJoins = Arrays.asList(tableAnnotation.rightJoinTo());
-        //TODO Проверку, чтобы у все классов в RightJoin в Table аннотации был entityClass в LeftJoin!!!
+        for (Class<? extends OrmEntity> rightClass : rightJoins){
+            if (!OrmTableWorker.getJoinLeftClass(rightClass).equals(entityClass))
+                throw new WrongJoinLeftReference(rightClass, entityClass);
+        }
         return rightJoins;
     }
 

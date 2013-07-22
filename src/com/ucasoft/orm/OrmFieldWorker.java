@@ -24,6 +24,7 @@ public class OrmFieldWorker {
         OrmField primaryKey;
         List<OrmField> fieldsWithoutKey;
         List<OrmField> foreignFields;
+        HashMap<Class<? extends OrmEntity>, OrmField> referenceFields;
     }
 
     private static HashMap<Class<? extends OrmEntity>, ClassFieldsInfo> hashedClassesInfo = new HashMap<Class<? extends OrmEntity>, ClassFieldsInfo>();
@@ -146,5 +147,30 @@ public class OrmFieldWorker {
         result.add(getPrimaryKeyField(entityClass));
         result.addAll(getAnnotationFieldsWithOutPrimaryKey(entityClass));
         return result;
+    }
+
+    static OrmField getReferenceField(Class<? extends OrmEntity> entityClass, Class<? extends OrmEntity> referenceTo) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference {
+        if (!hashedClassesInfo.containsKey(entityClass)) {
+            ClassFieldsInfo classFieldsInfo = new ClassFieldsInfo();
+            classFieldsInfo.referenceFields = new HashMap<Class<? extends OrmEntity>, OrmField>();
+            classFieldsInfo.referenceFields.put(referenceTo, getClassReferenceField(entityClass, referenceTo));
+            hashedClassesInfo.put(entityClass, classFieldsInfo);
+        } else {
+            ClassFieldsInfo classFieldsInfo = hashedClassesInfo.get(entityClass);
+            if (classFieldsInfo.referenceFields == null) {
+                classFieldsInfo.referenceFields = new HashMap<Class<? extends OrmEntity>, OrmField>();
+                classFieldsInfo.referenceFields.put(referenceTo, getClassReferenceField(entityClass, referenceTo));
+            } else if (!classFieldsInfo.referenceFields.containsKey(referenceTo))
+                classFieldsInfo.referenceFields.put(referenceTo, getClassReferenceField(entityClass, referenceTo));
+        }
+        return hashedClassesInfo.get(entityClass).referenceFields.get(referenceTo);
+    }
+
+    private static OrmField getClassReferenceField(Class<? extends OrmEntity> entityClass, Class<? extends OrmEntity> referenceTo) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference {
+        for (OrmField field : getAnnotationFieldsWithOutPrimaryKey(entityClass)){
+            if (referenceTo.isAssignableFrom(field.getType()))
+                return field;
+        }
+        return null;
     }
 }
