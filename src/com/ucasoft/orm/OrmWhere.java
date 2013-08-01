@@ -4,6 +4,7 @@ import com.ucasoft.orm.exceptions.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,6 +17,7 @@ public class OrmWhere {
 
     private final Class<? extends OrmEntity> entityClass;
     private String where;
+    private String order = null;
     private List<String> params;
 
     public OrmWhere(Class<? extends OrmEntity> entityClass) {
@@ -26,12 +28,15 @@ public class OrmWhere {
 
     public OrmWhere Equals(String column, Object value){
         where += String.format("%s = ?", column);
+        if (String.class.isAssignableFrom(value.getClass()))
+            params.add(String.format("'%s'", value));
+        else
         params.add(value.toString());
         return this;
     }
 
     private <T extends OrmEntity> List<T> Select(Class<T> entityClass) throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference, WrongListReference {
-        return OrmUtils.getEntitiesWhere(entityClass, where, params.toArray(new String[params.size()]));
+        return OrmUtils.getEntitiesWhere(entityClass, where, params.toArray(new String[params.size()]), order);
     }
 
     public <T extends OrmEntity> List<T> Select() throws NotFindTableAnnotation, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, IllegalAccessException, WrongListReference, NotFindPrimaryKeyField, DiscrepancyMappingColumns, WrongJoinLeftReference {
@@ -57,6 +62,14 @@ public class OrmWhere {
     public OrmWhere Or() {
         where += " or ";
         return this;
+    }
+
+    public OrmWhere OrderBy(OrmOrder direction, String... columns) throws TooManyOrdersInOrmWhere {
+        if (order == null){
+            order = String.format("%s %s", Arrays.deepToString(columns).replace("[", "").replace("]", ""), direction);
+            return this;
+        }
+        throw new TooManyOrdersInOrmWhere();
     }
 
     public OrmWhere FindChild(Class<? extends OrmEntity> entityClass) {

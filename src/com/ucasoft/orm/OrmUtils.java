@@ -200,8 +200,8 @@ public class OrmUtils {
         }
     }
 
-    static <T extends OrmEntity> List<T> getEntitiesWhere(Class<T> entityClass, String where, String[] params) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
-        return getEntities(entityClass, where, params, false);
+    static <T extends OrmEntity> List<T> getEntitiesWhere(Class<T> entityClass, String where, String[] params, String order) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
+        return getEntities(entityClass, where, params, order, false);
     }
 
     interface DefaultValues{
@@ -222,14 +222,14 @@ public class OrmUtils {
     }
 
     static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
-        return getEntities(entityClass, null, null, false);
+        return getEntities(entityClass, null, null, null, false);
     }
 
     static <T extends OrmEntity> List<T> getAllEntities(Class<T> entityClass, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
-        return getEntities(entityClass, null, null, includeLeftChild);
+        return getEntities(entityClass, null, null, null, includeLeftChild);
     }
 
-    static <T extends OrmEntity> List<T> getEntities(Class<T> entityClass, String where, String[] params, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
+    static <T extends OrmEntity> List<T> getEntities(Class<T> entityClass, String where, String[] params, String order, boolean includeLeftChild) throws NotFindTableAnnotation, WrongRightJoinReference, NoSuchMethodException, NotFindPrimaryKeyField, DiscrepancyMappingColumns, InstantiationException, WrongListReference, IllegalAccessException, InvocationTargetException, WrongJoinLeftReference {
         ArrayList<T> result = new ArrayList<T>();
         boolean cashed = OrmTableWorker.isCashed(entityClass);
         List<Class<? extends OrmEntity>> rightToClasses = OrmTableWorker.getTableRightJoinClasses(entityClass);
@@ -253,6 +253,8 @@ public class OrmUtils {
             }
             sql += notExists;
         }
+        if (order != null)
+            sql += " ORDER BY " + order;
         Cursor cursor = OrmFactory.getDatabase().rawQuery(sql, null);
         if (cursor.moveToFirst()){
             if (cashed){
@@ -271,6 +273,8 @@ public class OrmUtils {
                 sql = "SELECT * FROM " + OrmTableWorker.getTableName(rightEntityClass) + " LEFT JOIN " + OrmTableWorker.getTableName(entityClass) + " ON " + OrmFieldWorker.getPrimaryKeyField(rightEntityClass).getName() + " = " + OrmFieldWorker.getPrimaryKeyField(entityClass).getName();
                 if (where != null)
                     sql += String.format(" WHERE " + where.replace("?", "%s"), params).replace("[", "").replace("]", "");
+                if (order != null)
+                    sql += " ORDER BY " + order;
                 cursor = OrmFactory.getDatabase().rawQuery(sql, null);
                 if (cursor.moveToFirst()){
                     if (cashed) {
@@ -340,6 +344,7 @@ public class OrmUtils {
                     field.set(entity, parentEntity);
                 else {
                     long referenceEntityId = cursor.getLong(cursorIndex);
+                    if (referenceEntityId > 0)
                     field.set(entity, getEntityByKey(fieldType, referenceEntityId));
                 }
             }else
@@ -352,9 +357,16 @@ public class OrmUtils {
     }
 
     private static <T extends OrmEntity> T getEntityByKey(Class<T> entityClass, Long entityId) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference, IllegalAccessException, DiscrepancyMappingColumns, InstantiationException, WrongListReference, NoSuchMethodException, InvocationTargetException, WrongJoinLeftReference {
-        List<T> result = getEntities(entityClass, String.format("%s = ?", getPrimaryKeyColumn(entityClass).getName()), new String[]{entityId.toString()}, true);
+        if (entityId > 0){
+            if (OrmTableWorker.isCashed(entityClass)){
+                T result = findCashedEntity(entityClass, entityId);
+                if (result != null)
+                    return result;
+            }
+            List<T> result = getEntities(entityClass, String.format("%s = ?", getPrimaryKeyColumn(entityClass).getName()), new String[]{entityId.toString()}, null, true);
         if (result.size() > 0)
             return result.get(0);
+        }
         return null;
     }
 
