@@ -157,10 +157,10 @@ public class OrmUtils {
             if (checkReference(field)) {
                 OrmEntity referenceEntity = (OrmEntity) field.get(entity);
                 if (referenceEntity != null){
-                OrmField primaryKeyField = OrmFieldWorker.getPrimaryKeyField(referenceEntity.getClass());
-                primaryKeyField.setAccessible(true);
-                values.put(columnName, (Long) primaryKeyField.get(referenceEntity));
-            }
+                    OrmField primaryKeyField = OrmFieldWorker.getPrimaryKeyField(referenceEntity.getClass());
+                    primaryKeyField.setAccessible(true);
+                    values.put(columnName, (Long) primaryKeyField.get(referenceEntity));
+                }
             }
             else{
                 String fieldType = field.getType().getSimpleName().toUpperCase();
@@ -240,7 +240,7 @@ public class OrmUtils {
         }
         if (where != null)
             sql += String.format(" WHERE " + where.replace("?", "%s"), params).replace("[", "").replace("]", "");
-        if (rightToClasses.size() > 0){
+        if (rightToClasses.size() > 0) {
             String notExists;
             if (where == null)
                 notExists = " WHERE ";
@@ -262,10 +262,10 @@ public class OrmUtils {
                     result.add(buildCashedEntity(entityClass, cursor));
                 } while (cursor.moveToNext());
             } else {
-            do{
-                result.add(createEntity(entityClass, cursor));
-            } while (cursor.moveToNext());
-        }
+                do{
+                    result.add(createEntity(entityClass, cursor));
+                } while (cursor.moveToNext());
+            }
         }
         cursor.close();
         if (includeLeftChild){
@@ -278,14 +278,14 @@ public class OrmUtils {
                 cursor = OrmFactory.getDatabase().rawQuery(sql, null);
                 if (cursor.moveToFirst()){
                     if (cashed) {
-                    do{
+                        do{
                             result.add((T) buildCashedEntity(rightEntityClass, cursor));
-                } while (cursor.moveToNext());
-            } else {
-                    do{
+                        } while (cursor.moveToNext());
+                    } else {
+                        do{
                             result.add((T) createEntity(rightEntityClass, cursor));
-                    } while (cursor.moveToNext());
-                }
+                        } while (cursor.moveToNext());
+                    }
                 }
             }
         }
@@ -324,7 +324,7 @@ public class OrmUtils {
     }
 
     private static <T extends OrmEntity> T createEntity(Class<T> entityClass, T parentEntity, Cursor cursor) throws InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, WrongListReference, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongJoinLeftReference {
-                T entity = entityClass.getConstructor().newInstance();
+        T entity = entityClass.getConstructor().newInstance();
         if (OrmTableWorker.getTableJoinLeftClass(entityClass) != null)
             buildEntity((Class<OrmEntity>) OrmTableWorker.getTableJoinLeftClass(entityClass), parentEntity, cursor, entity);
         buildEntity(entityClass, parentEntity, cursor, entity);
@@ -334,10 +334,10 @@ public class OrmUtils {
     private static <T extends OrmEntity> void buildEntity(Class<T> entityClass, T parentEntity, Cursor cursor, T entity) throws WrongRightJoinReference, NotFindTableAnnotation, WrongListReference, DiscrepancyMappingColumns, IllegalAccessException, NotFindPrimaryKeyField, InstantiationException, NoSuchMethodException, InvocationTargetException, WrongJoinLeftReference {
         Class<? extends OrmEntity> tableJoinLeftClass = OrmTableWorker.getTableJoinLeftClass(entityClass);
         for(OrmField field : OrmFieldWorker.getAllAnnotationFields(entityClass)){
-                    int cursorIndex = cursor.getColumnIndex(getColumnName(field));
-                    if (cursorIndex < 0)
-                        throw new DiscrepancyMappingColumns(entityClass, field);
-                    field.setAccessible(true);
+            int cursorIndex = cursor.getColumnIndex(getColumnName(field));
+            if (cursorIndex < 0)
+                throw new DiscrepancyMappingColumns(entityClass, field);
+            field.setAccessible(true);
             if (checkReference(field) && !field.getType().equals(tableJoinLeftClass)) {
                 Class<? extends OrmEntity> fieldType = (Class<? extends OrmEntity>) field.getType();
                 if (parentEntity != null && fieldType.isAssignableFrom(parentEntity.getClass()))
@@ -345,11 +345,11 @@ public class OrmUtils {
                 else {
                     long referenceEntityId = cursor.getLong(cursorIndex);
                     if (referenceEntityId > 0)
-                    field.set(entity, getEntityByKey(fieldType, referenceEntityId));
+                        field.set(entity, getEntityByKey(fieldType, referenceEntityId));
                 }
-            }else
-                    field.set(entity, getValue(cursor, cursorIndex, field));
-                }
+            } else
+                field.set(entity, getValue(cursor, cursorIndex, field));
+        }
         for (OrmField field : OrmFieldWorker.getForeignFields(entityClass)) {
             field.setAccessible(true);
             field.set(entity, getAllEntitiesForParent((Class<OrmEntity>) ((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0], entityClass, entity));
@@ -364,8 +364,8 @@ public class OrmUtils {
                     return result;
             }
             List<T> result = getEntities(entityClass, String.format("%s = ?", getPrimaryKeyColumn(entityClass).getName()), new String[]{entityId.toString()}, null, true);
-        if (result.size() > 0)
-            return result.get(0);
+            if (result.size() > 0)
+                return result.get(0);
         }
         return null;
     }
@@ -380,15 +380,17 @@ public class OrmUtils {
             return new Date(cursor.getLong(cursorIndex));
         else if (fieldType.equals("STRING"))
             return cursor.getString(cursorIndex);
-        else if (fieldType.equals("DOUBLE"))
-            return cursor.getDouble(cursorIndex);
-        else if (fieldType.equals("DRAWABLE")){
+        else if (fieldType.equals("DOUBLE")){
+            String value = cursor.getString(cursorIndex);
+            if (value != null)
+                return Double.valueOf(value);
+        } else if (fieldType.equals("DRAWABLE")){
             byte[] bytes = cursor.getBlob(cursorIndex);
             return new BitmapDrawable(null, BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
         } else if(fieldType.equals("DOCUMENT"))
             return getDocumentFromString(cursor.getString(cursorIndex));
         return null;
-        }
+    }
 
     private static Document getDocumentFromString(String string) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -397,8 +399,8 @@ public class OrmUtils {
             return builder.parse(new InputSource(new StringReader(string)));
         } catch (Exception e) {
             e.printStackTrace();
-        return null;
-    }
+            return null;
+        }
     }
 
     private static void InsertDefaultValues(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongListReference, NotFindPrimaryKeyField, WrongRightJoinReference {
@@ -484,7 +486,7 @@ public class OrmUtils {
             } else {
                 if (columnAnnotation.primaryKey())
                     return "PRIMARY KEY ASC";
-        }
+            }
         }
         return "";
     }

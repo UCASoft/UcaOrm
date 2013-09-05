@@ -27,7 +27,7 @@ public class OrmFactory {
     public static void SetHelper(Class<? extends OrmHelper> ormHelperClass, Context context) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         Constructor<?> constructor = ormHelperClass.getDeclaredConstructor(Context.class, String.class, SQLiteDatabase.CursorFactory.class, int.class);
         ormHelper = (OrmHelper) constructor.newInstance(context, getDatabaseName(context), null, getDatabaseVersion(context));
-        ormHelper.getWritableDatabase().setForeignKeyConstraintsEnabled(true);
+        ormHelper.getWritableDatabase().execSQL("PRAGMA foreign_keys=ON;");
     }
 
     private static int getDatabaseVersion(Context context) {
