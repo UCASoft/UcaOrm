@@ -26,8 +26,8 @@ public abstract class OrmEntity {
     }
 
     protected boolean alter() throws WrongListReference, WrongRightJoinReference, IllegalAccessException, NotFindTableAnnotation {
-            return OrmUtils.alter(this);
-        }
+        return OrmUtils.alter(this);
+    }
 
     protected boolean delete() throws IllegalAccessException, WrongRightJoinReference, NotFindPrimaryKeyField, NotFindTableAnnotation {
         return OrmUtils.delete(this);

@@ -135,9 +135,14 @@ public final class OrmField {
         throw new IllegalAccessException();
     }
 
-    public double getDouble(OrmEntity entity) throws IllegalAccessException {
-        if (field != null)
-            return field.getDouble(entity);
+    public Double getDouble(OrmEntity entity) throws IllegalAccessException {
+        if (field != null) {
+            Object value = field.get(entity);
+            if (value != null)
+                return Double.valueOf(value.toString());
+            else
+                return null;
+        }
         throw new IllegalAccessException();
     }
 
