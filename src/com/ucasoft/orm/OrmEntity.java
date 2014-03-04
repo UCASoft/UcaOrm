@@ -25,7 +25,7 @@ public abstract class OrmEntity {
         return new OrmWhere(entityClass);
     }
 
-    protected boolean alter() throws WrongListReference, WrongRightJoinReference, IllegalAccessException, NotFindTableAnnotation {
+    public boolean alter() throws WrongListReference, WrongRightJoinReference, IllegalAccessException, NotFindTableAnnotation {
         return OrmUtils.alter(this);
     }
 
