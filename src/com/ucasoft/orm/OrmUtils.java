@@ -21,12 +21,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * Created by UCASoft with IntelliJ IDEA.
@@ -440,7 +436,7 @@ public class OrmUtils {
         return result;
     }
 
-    private static String getColumnName(OrmField field) {
+    static String getColumnName(OrmField field) {
         Column columnAnnotation = field.getAnnotation(Column.class);
         String columnName = columnAnnotation.name();
         if (columnName.equals(""))
@@ -489,5 +485,59 @@ public class OrmUtils {
             }
         }
         return "";
+    }
+
+    static <T> List<Class<? extends OrmEntity>> getTypeArguments(Class<T> baseClass, Class<? extends T> childClass) {
+        Map<Type, Type> resolvedTypes = new HashMap<Type, Type>();
+        Type type = childClass;
+        while (!getClass(type).equals(baseClass)) {
+            if (type instanceof Class) {
+                type = ((Class) type).getGenericSuperclass();
+            } else {
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Class<?> rawType = (Class) parameterizedType.getRawType();
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                TypeVariable<?>[] typeParameters = rawType.getTypeParameters();
+                for (int i = 0; i < actualTypeArguments.length; i++) {
+                    resolvedTypes.put(typeParameters[i], actualTypeArguments[i]);
+                }
+                if (!rawType.equals(baseClass)) {
+                    type = rawType.getGenericSuperclass();
+                }
+            }
+        }
+        Type[] actualTypeArguments;
+        if (type instanceof Class) {
+            actualTypeArguments = ((Class) type).getTypeParameters();
+        } else {
+            actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+        }
+        List<Class<? extends OrmEntity>> typeArgumentsAsClasses = new ArrayList<Class<? extends OrmEntity>>();
+        for (Type baseType : actualTypeArguments) {
+            while (resolvedTypes.containsKey(baseType)) {
+                baseType = resolvedTypes.get(baseType);
+            }
+            typeArgumentsAsClasses.add(getClass(baseType));
+        }
+        return typeArgumentsAsClasses;
+    }
+
+    private static Class<? extends OrmEntity> getClass(Type type) {
+        if (type instanceof Class) {
+            return (Class) type;
+        } else if (type instanceof ParameterizedType) {
+            return getClass(((ParameterizedType) type).getRawType());
+        } else if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type)
+                    .getGenericComponentType();
+            Class<? extends OrmEntity> componentClass = getClass(componentType);
+            if (componentClass != null) {
+                return (Class<? extends OrmEntity>) Array.newInstance(componentClass, 0).getClass();
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }
