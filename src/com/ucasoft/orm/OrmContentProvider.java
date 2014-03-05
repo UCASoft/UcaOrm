@@ -1,15 +1,12 @@
 package com.ucasoft.orm;
 
 import android.content.ContentProvider;
-import android.database.Cursor;
-import android.net.Uri;
-import com.ucasoft.orm.exceptions.*;
+import com.ucasoft.orm.exceptions.IllegalUpdateException;
+import com.ucasoft.orm.exceptions.NotFindTableAnnotation;
+import com.ucasoft.orm.exceptions.WrongListReference;
+import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
-import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by UCASoft.
@@ -22,10 +19,10 @@ public abstract class OrmContentProvider<T extends OrmEntity> extends ContentPro
     public OrmCursor<T> query(OrmWhere where){
         try {
             List<T> select;
-            Class<T> clazz = (Class<T>) OrmUtils.getTypeArguments(OrmContentProvider.class, this.getClass()).get(0);
-            if (where == null)
+            if (where == null) {
+                Class<T> clazz = (Class<T>) OrmUtils.getTypeArguments(OrmContentProvider.class, this.getClass()).get(0);
                 select = T.getAllEntities(clazz);
-            else
+            } else
                 select = where.Select();
             return new OrmCursor<T>(select);
         } catch (Exception e) {
@@ -34,8 +31,29 @@ public abstract class OrmContentProvider<T extends OrmEntity> extends ContentPro
         return null;
     }
 
-    @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        return null;
+    public int update(T entity) throws IllegalUpdateException {
+        Class<? extends OrmEntity> joinLeftClass = null;
+        OrmField primaryKeyField;
+        try {
+            joinLeftClass = OrmTableWorker.getTableJoinLeftClass(entity.getClass());
+            if (joinLeftClass != null)
+                primaryKeyField = OrmFieldWorker.getPrimaryKeyField(joinLeftClass);
+            else
+                primaryKeyField = OrmFieldWorker.getPrimaryKeyField(entity.getClass());
+            primaryKeyField.setAccessible(true);
+            if (primaryKeyField.get(entity) != null) {
+                throw new IllegalUpdateException();
+            }
+            return entity.alter() ? 1 : 0;
+        } catch (NotFindTableAnnotation notFindTableAnnotation) {
+            notFindTableAnnotation.printStackTrace();
+        } catch (WrongRightJoinReference wrongRightJoinReference) {
+            wrongRightJoinReference.printStackTrace();
+        } catch (WrongListReference wrongListReference) {
+            wrongListReference.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }
