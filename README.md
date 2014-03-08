@@ -10,7 +10,7 @@ This is new generation orm for Android.
 
 ### 2. Create application classes
 
-''' java
+``` java
 public class DataBaseHelper extends OrmHelper {
 
     public DataBaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
@@ -31,6 +31,6 @@ public class DataBaseHelper extends OrmHelper {
 
     }
 }
-'''
+```
 
 ### 3. Android manifest
