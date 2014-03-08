@@ -32,5 +32,33 @@ public class DataBaseHelper extends OrmHelper {
     }
 }
 ```
+``` java
+public class MyApplication extends Application {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        try{
+            OrmFactory.SetHelper(DataBaseHelper.class, getApplicationContext());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onTerminate() {
+        OrmFactory.ReleaseHelper();
+        super.onTerminate();
+    }
+}
+```
 
 ### 3. Android manifest
+
+``` xml
+<manifest>
+    <application android:name=".MyApplication">
+    ...
+    </application>
+</manifest>
+```
