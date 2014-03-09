@@ -121,7 +121,7 @@ public class MyApplication extends Application {
 
 #### 4.1 Create tables
 
-Add code to onCreate method in DataBaseHelper
+Add code to **onCreate** method in DataBaseHelper
 
 ``` java
     protected void onCreate() {
@@ -138,7 +138,7 @@ Add code to onCreate method in DataBaseHelper
 
 #### 4.2 Add default values
 
-Add code to getDefaultValues method in DataBaseHelper
+Add code to **getDefaultValues** method in DataBaseHelper
 
 ``` java
     public void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList) {
@@ -156,7 +156,7 @@ Add code to getDefaultValues method in DataBaseHelper
 
 #### 4.3 Select all entity instances
 
-Add getAllCarTypes method in CarType
+Add **getAllCarTypes** method in CarType
 
 ``` java
     public static List<CarType> getAllCarTypes(){
@@ -262,19 +262,19 @@ Created in Car Where method
     }
 ```
 
-Will select all cars where engine power equals 120
+Will select all cars where engine power equals **120**
 
 ``` java
     List<Car> cars = Car.Where().Equals("engine_power", 120).Select();
 ```
 
-Will select all cars where engine power equals 120 and doors count equals 4
+Will select all cars where engine power equals **120** and doors count equals **4**
 
 ``` java
     List<Car> cars = Car.Where().Equals(“engine_power”, 120).And().Equals("doors_count", 4).Select();
 ```
 
-Will select one car who have Pirlin wheel
+Will select one car who have **Pirlin** wheel
 
 ``` java
     Car car = Car.Where().FindChild(Wheel.class, new OrmWhere(Wheel.class).Equals("manufacturer", "Pirlin")).SelectFirst();
