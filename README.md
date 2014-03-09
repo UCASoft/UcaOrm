@@ -271,7 +271,7 @@ Will select all cars where engine power equals **120**
 Will select all cars where engine power equals **120** and doors count equals **4**
 
 ``` java
-    List<Car> cars = Car.Where().Equals(“engine_power”, 120).And().Equals("doors_count", 4).Select();
+    List<Car> cars = Car.Where().Equals("engine_power", 120).And().Equals("doors_count", 4).Select();
 ```
 
 Will select one car who have **Pirlin** wheel
