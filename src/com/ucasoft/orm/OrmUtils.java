@@ -32,7 +32,7 @@ import java.util.*;
  */
 public class OrmUtils {
 
-    private static HashMap<Class<? extends OrmEntity>, List<OrmEntity>> cashedEntityLists = new HashMap<Class<? extends OrmEntity>, List<OrmEntity>>();
+    private final static HashMap<Class<? extends OrmEntity>, List<OrmEntity>> cashedEntityLists = new HashMap<Class<? extends OrmEntity>, List<OrmEntity>>();
 
     private static List<OrmEntity> getCashedList(Class<? extends OrmEntity> entityClass){
         if (!cashedEntityLists.containsKey(entityClass))
@@ -126,7 +126,7 @@ public class OrmUtils {
                 foreignFields.addAll(0, OrmFieldWorker.getForeignFields(joinLeftClass));
             for (OrmField field : foreignFields){
                 field.setAccessible(true);
-                for(OrmEntity entityItem : (List<OrmEntity>)field.get(entity)){
+                for(OrmEntity entityItem : (List<OrmEntity>)field.get(entity)) {
                     result = alter(entityItem, database);
                     if (!result)
                         return false;
@@ -147,7 +147,7 @@ public class OrmUtils {
             findToClass = joinLeftClass;
         else
             findToClass = entity.getClass();
-        for (OrmField field : OrmFieldWorker.getAnnotationFieldsWithOutPrimaryKey(findToClass)){
+        for (OrmField field : OrmFieldWorker.getAnnotationFieldsWithOutPrimaryKey(findToClass)) {
             field.setAccessible(true);
             String columnName = getColumnName(field);
             if (checkReference(field)) {
@@ -166,11 +166,13 @@ public class OrmUtils {
                     values.put(columnName, (Long) field.get(entity));
                 else if (fieldType.equals("DATE"))
                     values.put(columnName, ((Date)field.get(entity)).getTime());
+                else if (fieldType.equals("BOOLEAN"))
+                    values.put(columnName, ((Boolean)field.get(entity)) ? 1 : 0);
                 else if (fieldType.equals("STRING"))
                     values.put(columnName, (String) field.get(entity));
                 else if (fieldType.equals("DOUBLE"))
                     values.put(columnName, field.getDouble(entity));
-                else if (fieldType.equals("DRAWABLE")){
+                else if (fieldType.equals("DRAWABLE")) {
                     Bitmap bitmap = ((BitmapDrawable)field.get(entity)).getBitmap();
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
@@ -190,7 +192,7 @@ public class OrmUtils {
             Transformer transformer = factory.newTransformer();
             transformer.transform(new DOMSource(document), result);
             return writer.toString();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
@@ -200,11 +202,11 @@ public class OrmUtils {
         return getEntities(entityClass, where, params, order, false);
     }
 
-    interface DefaultValues{
-        void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList);
+    interface DefaultValues {
+        void getDefaultValues(Class<? extends OrmEntity> entityClass, List<OrmEntity> valueList);
     }
 
-    public static void CreateTable(Class<? extends OrmEntity> entityClass) throws NotFindPrimaryKeyField, WrongListReference, NotFindTableAnnotation, WrongRightJoinReference {
+    public static void CreateTable(Class<? extends OrmEntity> entityClass) throws NotFindPrimaryKeyField, WrongListReference, NotFindTableAnnotation, WrongRightJoinReference, IllegalAccessException {
         String table;
         table = "CREATE TABLE " + OrmTableWorker.getTableName(entityClass);
         table = table + " (" + getColumns(entityClass);
@@ -252,9 +254,9 @@ public class OrmUtils {
         if (order != null)
             sql += " ORDER BY " + order;
         Cursor cursor = OrmFactory.getDatabase().rawQuery(sql, null);
-        if (cursor.moveToFirst()){
+        if (cursor.moveToFirst()) {
             if (cashed){
-                do{
+                do {
                     result.add(buildCashedEntity(entityClass, cursor));
                 } while (cursor.moveToNext());
             } else {
@@ -265,7 +267,7 @@ public class OrmUtils {
         }
         cursor.close();
         if (includeLeftChild){
-            for(Class<? extends OrmEntity> rightEntityClass : rightToClasses){
+            for(Class<? extends OrmEntity> rightEntityClass : rightToClasses) {
                 sql = "SELECT * FROM " + OrmTableWorker.getTableName(rightEntityClass) + " LEFT JOIN " + OrmTableWorker.getTableName(entityClass) + " ON " + OrmFieldWorker.getPrimaryKeyField(rightEntityClass).getName() + " = " + OrmFieldWorker.getPrimaryKeyField(entityClass).getName();
                 if (where != null)
                     sql += String.format(" WHERE " + where.replace("?", "%s"), params).replace("[", "").replace("]", "");
@@ -354,7 +356,7 @@ public class OrmUtils {
 
     private static <T extends OrmEntity> T getEntityByKey(Class<T> entityClass, Long entityId) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference, IllegalAccessException, DiscrepancyMappingColumns, InstantiationException, WrongListReference, NoSuchMethodException, InvocationTargetException, WrongJoinLeftReference {
         if (entityId > 0){
-            if (OrmTableWorker.isCashed(entityClass)){
+            if (OrmTableWorker.isCashed(entityClass)) {
                 T result = findCashedEntity(entityClass, entityId);
                 if (result != null)
                     return result;
@@ -374,6 +376,8 @@ public class OrmUtils {
             return cursor.getLong(cursorIndex);
         else if (fieldType.equals("DATE"))
             return new Date(cursor.getLong(cursorIndex));
+        else if (fieldType.equals("BOOLEAN"))
+            return cursor.getInt(cursorIndex) == 1;
         else if (fieldType.equals("STRING"))
             return cursor.getString(cursorIndex);
         else if (fieldType.equals("DOUBLE")){
@@ -399,16 +403,12 @@ public class OrmUtils {
         }
     }
 
-    private static void InsertDefaultValues(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongListReference, NotFindPrimaryKeyField, WrongRightJoinReference {
-        List<DbColumn> columnsWithOutPrimaryKey = getColumnsWithOutPrimaryKey(entityClass);
-        ArrayList<String> callBackColumns = new ArrayList<String>();
-        for (DbColumn column : columnsWithOutPrimaryKey)
-            callBackColumns.add(column.getName());
-        ArrayList<ContentValues> valueList = new ArrayList<ContentValues>();
-        OrmFactory.getHelper().getDefaultValues(entityClass, callBackColumns, valueList);
+    private static void InsertDefaultValues(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference, IllegalAccessException {
+        List<OrmEntity> valueList = new ArrayList<OrmEntity>();
+        OrmFactory.getHelper().getDefaultValues(entityClass, valueList);
         if (valueList.size() > 0) {
-            for (ContentValues values : valueList) {
-                OrmFactory.getDatabase().insert(OrmTableWorker.getTableName(entityClass), null, values);
+            for (OrmEntity values : valueList) {
+                values.alter();
             }
         }
     }
@@ -444,10 +444,10 @@ public class OrmUtils {
         return columnName;
     }
 
-    private static String getColumnType(OrmField field) throws NotFindPrimaryKeyField, NotFindTableAnnotation {
+    private static String getColumnType(OrmField field) {
         Class type = field.getType();
         String fieldType = type.getSimpleName().toUpperCase();
-        if (fieldType.equals("INT") || fieldType.equals("LONG") || fieldType.equals("DATE") || checkReference(field))
+        if (fieldType.equals("INT") || fieldType.equals("LONG") || fieldType.equals("DATE") || fieldType.equals("BOOLEAN") || checkReference(field))
             return "INTEGER";
         else if (fieldType.equals("STRING") || fieldType.equals("DOCUMENT"))
             return "TEXT";
