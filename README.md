@@ -111,9 +111,9 @@ public class MyApplication extends Application {
 <manifest>
     <application android:name=".MyApplication">
     ...
+        <meta-data android:name="UO_DB_NAME" android:value="Cars" />
+        <meta-data android:name="UO_DB_VERSION" android:value="1" />
     </application>
-    <meta-data android:name="UO_DB_NAME" android:value="Cars" />
-    <meta-data android:name="UO_DB_VERSION" android:value="1" />
 </manifest>
 ```
 
