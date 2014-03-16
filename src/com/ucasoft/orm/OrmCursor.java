@@ -37,7 +37,7 @@ public class OrmCursor<T extends OrmEntity> extends AbstractCursor {
                 List<OrmField> fields = getOrmFields();
                 String[] result = new String[fields.size()];
                 for (int i = 0; i < fields.size(); i++){
-                    result[i] = OrmUtils.getColumnName(fields.get(i));
+                    result[i] = DbColumn.getColumnName(fields.get(i));
                 }
                 return result;
             } catch (Exception e) {

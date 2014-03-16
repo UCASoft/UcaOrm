@@ -78,6 +78,15 @@ class OrmFieldWorker {
         return hashedClassesInfo.get(entityClass).fieldsWithoutKey;
     }
 
+    static OrmField findAnnotationField(Class<? extends OrmEntity> entityClass, String columnName) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference {
+        for (OrmField field : getAllAnnotationFields(entityClass)) {
+            if (DbColumn.getColumnName(field).equals(columnName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
     private static List<OrmField> getClassAnnotationFieldsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass, Class<? extends OrmEntity> jointTo, List<OrmField> allFields, int level) throws WrongListReference {
         ArrayList<OrmField> classFields = new ArrayList<OrmField>();
         if (!entityClass.equals(jointTo)){

@@ -1,13 +1,13 @@
 package com.ucasoft.orm;
 
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import com.ucasoft.orm.annotations.Column;
-import com.ucasoft.orm.annotations.ReferenceAction;
+import android.os.Build;
 import com.ucasoft.orm.exceptions.*;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -30,6 +30,7 @@ import java.util.*;
  * Date: 27.06.13
  * Time: 9:26
  */
+@TargetApi(value = Build.VERSION_CODES.GINGERBREAD)
 public class OrmUtils {
 
     private final static HashMap<Class<? extends OrmEntity>, List<OrmEntity>> cashedEntityLists = new HashMap<Class<? extends OrmEntity>, List<OrmEntity>>();
@@ -114,10 +115,10 @@ public class OrmUtils {
         } else {
             int rowUpdated = 0;
             if (joinLeftClass != null) {
-                rowUpdated= database.update(OrmTableWorker.getTableName(joinLeftClass), getContentValues(entity, joinLeftClass), String.format("%s = ?", getColumnName(primaryKeyField)), new String[]{primaryKeyField.get(entity).toString()});
+                rowUpdated = database.update(OrmTableWorker.getTableName(joinLeftClass), getContentValues(entity, joinLeftClass), String.format("%s = ?", DbColumn.getColumnName(primaryKeyField)), new String[]{primaryKeyField.get(entity).toString()});
                 primaryKeyField = OrmFieldWorker.getPrimaryKeyField(entityClass);
             }
-            rowUpdated += database.update(OrmTableWorker.getTableName(entityClass), getContentValues(entity, null), String.format("%s = ?", getColumnName(primaryKeyField)), new String[]{primaryKeyField.get(entity).toString()});
+            rowUpdated += database.update(OrmTableWorker.getTableName(entityClass), getContentValues(entity, null), String.format("%s = ?", DbColumn.getColumnName(primaryKeyField)), new String[]{primaryKeyField.get(entity).toString()});
             result = rowUpdated > 0;
         }
         if (result) {
@@ -149,8 +150,8 @@ public class OrmUtils {
             findToClass = entity.getClass();
         for (OrmField field : OrmFieldWorker.getAnnotationFieldsWithOutPrimaryKey(findToClass)) {
             field.setAccessible(true);
-            String columnName = getColumnName(field);
-            if (checkReference(field)) {
+            String columnName = DbColumn.getColumnName(field);
+            if (DbColumn.isReferenceField(field)) {
                 OrmEntity referenceEntity = (OrmEntity) field.get(entity);
                 if (referenceEntity != null){
                     OrmField primaryKeyField = OrmFieldWorker.getPrimaryKeyField(referenceEntity.getClass());
@@ -158,27 +159,38 @@ public class OrmUtils {
                     values.put(columnName, (Long) primaryKeyField.get(referenceEntity));
                 }
             }
-            else{
-                String fieldType = field.getType().getSimpleName().toUpperCase();
-                if (fieldType.equals("INT"))
-                    values.put(columnName, field.getInt(entity));
-                else if (fieldType.equals("LONG"))
-                    values.put(columnName, (Long) field.get(entity));
-                else if (fieldType.equals("DATE"))
-                    values.put(columnName, ((Date)field.get(entity)).getTime());
-                else if (fieldType.equals("BOOLEAN"))
-                    values.put(columnName, ((Boolean)field.get(entity)) ? 1 : 0);
-                else if (fieldType.equals("STRING"))
-                    values.put(columnName, (String) field.get(entity));
-                else if (fieldType.equals("DOUBLE"))
-                    values.put(columnName, field.getDouble(entity));
-                else if (fieldType.equals("DRAWABLE")) {
-                    Bitmap bitmap = ((BitmapDrawable)field.get(entity)).getBitmap();
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                    values.put(columnName, stream.toByteArray());
-                } else if (fieldType.equals("DOCUMENT"))
-                    values.put(columnName, getStringFromDocument((Document)field.get(entity)));
+            else {
+                Class type = field.getType();
+                if (type.isArray()) {
+                    if (type.getComponentType().isPrimitive()) {
+                        String componentType = type.getComponentType().getSimpleName().toUpperCase();
+                        String data = "";
+                        if (componentType.equals("INT"))
+                            data = Arrays.toString((int[]) field.get(entity));
+                        values.put(columnName, data.substring(1, data.length() - 1));
+                    }
+                } else {
+                    String fieldType = type.getSimpleName().toUpperCase();
+                    if (fieldType.equals("INT"))
+                        values.put(columnName, field.getInt(entity));
+                    else if (fieldType.equals("LONG"))
+                        values.put(columnName, (Long) field.get(entity));
+                    else if (fieldType.equals("DATE"))
+                        values.put(columnName, ((Date) field.get(entity)).getTime());
+                    else if (fieldType.equals("BOOLEAN"))
+                        values.put(columnName, ((Boolean) field.get(entity)) ? 1 : 0);
+                    else if (fieldType.equals("STRING"))
+                        values.put(columnName, (String) field.get(entity));
+                    else if (fieldType.equals("DOUBLE"))
+                        values.put(columnName, field.getDouble(entity));
+                    else if (fieldType.equals("DRAWABLE")) {
+                        Bitmap bitmap = ((BitmapDrawable) field.get(entity)).getBitmap();
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                        values.put(columnName, stream.toByteArray());
+                    } else if (fieldType.equals("DOCUMENT"))
+                        values.put(columnName, getStringFromDocument((Document) field.get(entity)));
+                }
             }
         }
         return values;
@@ -200,6 +212,10 @@ public class OrmUtils {
 
     static <T extends OrmEntity> List<T> getEntitiesWhere(Class<T> entityClass, String where, String[] params, String order) throws IllegalAccessException, WrongJoinLeftReference, InstantiationException, InvocationTargetException, NoSuchMethodException, WrongRightJoinReference, NotFindTableAnnotation, DiscrepancyMappingColumns, NotFindPrimaryKeyField, WrongListReference {
         return getEntities(entityClass, where, params, order, false);
+    }
+
+    public static OrmUpdater UpdateTable(Class<? extends OrmEntity> entityClass) {
+        return new OrmUpdater(entityClass);
     }
 
     interface DefaultValues {
@@ -312,7 +328,7 @@ public class OrmUtils {
     private static <T extends OrmEntity> DbColumn getParentColumn(Class<OrmEntity> entityClass, Class<T> parentEntityClass) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference, NotFindPrimaryKeyField {
         for (OrmField field : OrmFieldWorker.getAnnotationFieldsWithOutPrimaryKey(entityClass)){
             if (field.getType().equals(parentEntityClass))
-                return new DbColumn(getColumnName(field), getColumnType(field), getColumnAdditional(field));
+                return new DbColumn(field);
         }
         return null;
     }
@@ -332,11 +348,11 @@ public class OrmUtils {
     private static <T extends OrmEntity> void buildEntity(Class<T> entityClass, T parentEntity, Cursor cursor, T entity) throws WrongRightJoinReference, NotFindTableAnnotation, WrongListReference, DiscrepancyMappingColumns, IllegalAccessException, NotFindPrimaryKeyField, InstantiationException, NoSuchMethodException, InvocationTargetException, WrongJoinLeftReference {
         Class<? extends OrmEntity> tableJoinLeftClass = OrmTableWorker.getTableJoinLeftClass(entityClass);
         for(OrmField field : OrmFieldWorker.getAllAnnotationFields(entityClass)){
-            int cursorIndex = cursor.getColumnIndex(getColumnName(field));
+            int cursorIndex = cursor.getColumnIndex(DbColumn.getColumnName(field));
             if (cursorIndex < 0)
                 throw new DiscrepancyMappingColumns(entityClass, field);
             field.setAccessible(true);
-            if (checkReference(field) && !field.getType().equals(tableJoinLeftClass)) {
+            if (DbColumn.isReferenceField(field) && !field.getType().equals(tableJoinLeftClass)) {
                 Class<? extends OrmEntity> fieldType = (Class<? extends OrmEntity>) field.getType();
                 if (parentEntity != null && fieldType.isAssignableFrom(parentEntity.getClass()))
                     field.set(entity, parentEntity);
@@ -369,26 +385,42 @@ public class OrmUtils {
     }
 
     private static Object getValue(Cursor cursor, int cursorIndex, OrmField field) {
-        String fieldType = field.getType().getSimpleName().toUpperCase();
-        if (fieldType.equals("INT"))
-            return cursor.getInt(cursorIndex);
-        else if (fieldType.equals("LONG"))
-            return cursor.getLong(cursorIndex);
-        else if (fieldType.equals("DATE"))
-            return new Date(cursor.getLong(cursorIndex));
-        else if (fieldType.equals("BOOLEAN"))
-            return cursor.getInt(cursorIndex) == 1;
-        else if (fieldType.equals("STRING"))
-            return cursor.getString(cursorIndex);
-        else if (fieldType.equals("DOUBLE")){
-            String value = cursor.getString(cursorIndex);
-            if (value != null)
-                return Double.valueOf(value);
-        } else if (fieldType.equals("DRAWABLE")){
-            byte[] bytes = cursor.getBlob(cursorIndex);
-            return new BitmapDrawable(null, BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
-        } else if(fieldType.equals("DOCUMENT"))
-            return getDocumentFromString(cursor.getString(cursorIndex));
+        Class<?> type = field.getType();
+        if (type.isArray()) {
+            if (type.getComponentType().isPrimitive()) {
+                String[] items = cursor.getString(cursorIndex).split(",");
+                Object result = null;
+                String componentName = type.getComponentType().getSimpleName().toUpperCase();
+                if (componentName.equals("INT"))
+                    result = new int[items.length];
+                for (int i = 0; i < items.length; i++) {
+                    if (componentName.equals("INT"))
+                        ((int[])result)[i] = Integer.parseInt(items[i].trim());
+                }
+                return result;
+            }
+        } else {
+            String fieldType = type.getSimpleName().toUpperCase();
+            if (fieldType.equals("INT"))
+                return cursor.getInt(cursorIndex);
+            else if (fieldType.equals("LONG"))
+                return cursor.getLong(cursorIndex);
+            else if (fieldType.equals("DATE"))
+                return new Date(cursor.getLong(cursorIndex));
+            else if (fieldType.equals("BOOLEAN"))
+                return cursor.getInt(cursorIndex) == 1;
+            else if (fieldType.equals("STRING"))
+                return cursor.getString(cursorIndex);
+            else if (fieldType.equals("DOUBLE")) {
+                String value = cursor.getString(cursorIndex);
+                if (value != null)
+                    return Double.valueOf(value);
+            } else if (fieldType.equals("DRAWABLE")) {
+                byte[] bytes = cursor.getBlob(cursorIndex);
+                return new BitmapDrawable(null, BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+            } else if (fieldType.equals("DOCUMENT"))
+                return getDocumentFromString(cursor.getString(cursorIndex));
+        }
         return null;
     }
 
@@ -416,7 +448,7 @@ public class OrmUtils {
     private static List<DbColumn> getColumnsWithOutPrimaryKey(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, WrongListReference, NotFindPrimaryKeyField, WrongRightJoinReference {
         ArrayList<DbColumn> columns = new ArrayList<DbColumn>();
         for(OrmField field : OrmFieldWorker.getAnnotationFieldsWithOutPrimaryKey(entityClass))
-            columns.add(new DbColumn(getColumnName(field), getColumnType(field), getColumnAdditional(field)));
+            columns.add(new DbColumn(field));
         return columns;
     }
 
@@ -432,59 +464,13 @@ public class OrmUtils {
     private static List<DbColumn> getAllColumn(Class<? extends  OrmEntity> entityClass) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference, WrongListReference {
         ArrayList<DbColumn> result = new ArrayList<DbColumn>();
         for(OrmField field : OrmFieldWorker.getAllAnnotationFields(entityClass))
-            result.add(new DbColumn(getColumnName(field), getColumnType(field), getColumnAdditional(field)));
+            result.add(new DbColumn(field));
         return result;
-    }
-
-    static String getColumnName(OrmField field) {
-        Column columnAnnotation = field.getAnnotation(Column.class);
-        String columnName = columnAnnotation.name();
-        if (columnName.equals(""))
-            columnName = field.getName().toLowerCase();
-        return columnName;
-    }
-
-    private static String getColumnType(OrmField field) {
-        Class type = field.getType();
-        String fieldType = type.getSimpleName().toUpperCase();
-        if (fieldType.equals("INT") || fieldType.equals("LONG") || fieldType.equals("DATE") || fieldType.equals("BOOLEAN") || checkReference(field))
-            return "INTEGER";
-        else if (fieldType.equals("STRING") || fieldType.equals("DOCUMENT"))
-            return "TEXT";
-        else if (fieldType.equals("DOUBLE"))
-            return "REAL";
-        else if (fieldType.equals("DRAWABLE"))
-            return "BLOB";
-        return "";
     }
 
     private static DbColumn getPrimaryKeyColumn(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference {
         OrmField primaryField = OrmFieldWorker.getPrimaryKeyField(entityClass);
-        return new DbColumn(getColumnName(primaryField), getColumnType(primaryField), getColumnAdditional(primaryField));
-    }
-
-    private static boolean checkReference(OrmField field){
-        return OrmEntity.class.isAssignableFrom(field.getType());
-    }
-
-    private static String getColumnAdditional(OrmField field) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference {
-        Class type = field.getType();
-        Column columnAnnotation = field.getAnnotation(Column.class);
-        if (columnAnnotation != null){
-            if (checkReference(field)) {
-                OrmField primaryKeyField = OrmFieldWorker.getPrimaryKeyField(type);
-                if (primaryKeyField == null)
-                    throw new NotFindPrimaryKeyField(type);
-                String reference = "REFERENCES " + OrmTableWorker.getTableName(type) + "(" + getColumnName(primaryKeyField) + ")";
-                if (columnAnnotation.onDelete() != ReferenceAction.NoAction)
-                    reference += " ON DELETE " + columnAnnotation.onDelete().getAction();
-                return reference;
-            } else {
-                if (columnAnnotation.primaryKey())
-                    return "PRIMARY KEY ASC";
-            }
-        }
-        return "";
+        return new DbColumn(primaryField);
     }
 
     static <T> List<Class<? extends OrmEntity>> getTypeArguments(Class<T> baseClass, Class<? extends T> childClass) {
