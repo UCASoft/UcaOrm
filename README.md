@@ -69,6 +69,10 @@ public class MyApplication extends Application {
 
         @Column
         private String code;
+
+        public CarType(String code) {
+            this.code = code;
+        }
     }
 
     @Table(rightJoinTo = {Truck.class})
@@ -142,14 +146,9 @@ Add code to **getDefaultValues** method in DataBaseHelper
 
 ``` java
     public void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList) {
-        ContentValues values;
         if (entityClass.equals(CarType.class)) {
-            values = new ContentValues();
-            values.put(columns.get(0), "Passenger");
-            valueList.add(values);
-            values = new ContentValues();
-            values.put(columns.get(0), "Truck");
-            valueList.add(values);
+            valueList.add(new CarType("Passenger"));
+            valueList.add(new CarType("Truck"));
         }
     }
 ```
@@ -278,4 +277,55 @@ Will select one car who have **Pirlin** wheel
 
 ``` java
     Car car = Car.Where().FindChild(Wheel.class, new OrmWhere(Wheel.class).Equals("manufacturer", "Pirlin")).SelectFirst();
+```
+
+#### 4.7 Update model
+
+Add to Car class new field **maxSpeed**
+
+``` java
+    @Table(rightJoinTo = {Truck.class})
+    public class Car extends BaseEntity {
+
+        @Column(name = "car_type")
+        private CarType type;
+
+        @Column
+        private List<Wheel> wheels;
+
+        @Column(name = "engine_power")
+        private int enginePower;
+
+        @Column(name = "doors_count")
+        private int doorsCount;
+
+        @Column(name = "max_speed")
+        private int maxSpeed;
+    }
+```
+
+Change database version in the manifest to 2
+
+``` xml
+<manifest>
+    <application android:name=".MyApplication">
+    ...
+        <meta-data android:name="UO_DB_NAME" android:value="Cars" />
+        <meta-data android:name="UO_DB_VERSION" android:value="2" />
+    </application>
+</manifest>
+```
+
+Add code to **onUpdate** method in DataBaseHelper
+
+``` java
+    protected void onUpgrade(int oldVersion, int newVersion) {
+        try {
+            if (oldVersion < 2) {
+                OrmUtils.UpdateTable(Car.class).addColumn("max_speed");
+            }
+        } catch (Exception e) {
+             e.printStackTrace();
+        }
+    }
 ```
