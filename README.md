@@ -29,7 +29,7 @@ public class DataBaseHelper extends OrmHelper {
     }
 
     @Override
-    public void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList) {
+    public void getDefaultValues(Class<? extends OrmEntity> entityClass, List<OrmEntity> valueList) {
 
     }
 }
