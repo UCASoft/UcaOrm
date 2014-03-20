@@ -145,7 +145,7 @@ Add code to **onCreate** method in DataBaseHelper
 Add code to **getDefaultValues** method in DataBaseHelper
 
 ``` java
-    public void getDefaultValues(Class<? extends OrmEntity> entityClass, ArrayList<String> columns, ArrayList<ContentValues> valueList) {
+    public void getDefaultValues(Class<? extends OrmEntity> entityClass, List<OrmEntity> valueList) {
         if (entityClass.equals(CarType.class)) {
             valueList.add(new CarType("Passenger"));
             valueList.add(new CarType("Truck"));
@@ -281,7 +281,7 @@ Will select one car who have **Pirlin** wheel
 
 #### 4.7 Update model
 
-Add to Car class new field **maxSpeed**
+Add to Car class new field **maxSpeed** and remove field **doorsCount**
 
 ``` java
     @Table(rightJoinTo = {Truck.class})
@@ -295,9 +295,6 @@ Add to Car class new field **maxSpeed**
 
         @Column(name = "engine_power")
         private int enginePower;
-
-        @Column(name = "doors_count")
-        private int doorsCount;
 
         @Column(name = "max_speed")
         private int maxSpeed;
@@ -316,13 +313,30 @@ Change database version in the manifest to 2
 </manifest>
 ```
 
-Add code to **onUpdate** method in DataBaseHelper
+Add code to **onUpdate** method in DataBaseHelper. You cad write once this:
 
 ``` java
     protected void onUpgrade(int oldVersion, int newVersion) {
         try {
             if (oldVersion < 2) {
-                OrmUtils.UpdateTable(Car.class).addColumn("max_speed");
+                OrmUtils.UpdateTable(Car.class).work();
+            }
+        } catch (Exception e) {
+             e.printStackTrace();
+        }
+    }
+```
+
+But! You can help orm do his work! And also, if need add to new field default value:
+
+``` java
+    protected void onUpgrade(int oldVersion, int newVersion) {
+        try {
+            if (oldVersion < 2) {
+                OrmUtils.UpdateTable(Car.class).addColumn("max_speed", 100);
+                /*Or if not need default value, just
+                OrmUtils.UpdateTable(Car.class).addColumn("max_speed");*/
+                OrmUtils.UpdateTable(Car.class).removeColumn("doors_count");
             }
         } catch (Exception e) {
              e.printStackTrace();
