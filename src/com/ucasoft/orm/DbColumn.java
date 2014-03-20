@@ -20,7 +20,7 @@ class DbColumn {
 
     private String additional;
 
-    private DbColumn(String name, String type, String additional) {
+    public DbColumn(String name, String type, String additional) {
         this.name = name;
         this.type = type;
         this.additional = additional;

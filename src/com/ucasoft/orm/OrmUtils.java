@@ -218,6 +218,24 @@ public class OrmUtils {
         return new OrmUpdater(entityClass);
     }
 
+    static List<DbColumn> getBaseColumns(Class<? extends OrmEntity> entityClass) throws NotFindTableAnnotation {
+        List<DbColumn> result = new ArrayList<DbColumn>();
+        String sql = String.format("PRAGMA table_info(%s);", OrmTableWorker.getTableName(entityClass));
+        Cursor cursor = OrmFactory.getDatabase().rawQuery(sql, null);
+        try {
+            if (cursor.moveToFirst()) {
+                int nameIndex = cursor.getColumnIndexOrThrow("name");
+                int typeIndex = cursor.getColumnIndexOrThrow("type");
+                do {
+                    result.add(new DbColumn(cursor.getString(nameIndex), cursor.getString(typeIndex), ""));
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            cursor.close();
+        }
+        return result;
+    }
+
     interface DefaultValues {
         void getDefaultValues(Class<? extends OrmEntity> entityClass, List<OrmEntity> valueList);
     }
@@ -301,6 +319,7 @@ public class OrmUtils {
                         } while (cursor.moveToNext());
                     }
                 }
+                cursor.close();
             }
         }
         return result;
@@ -461,7 +480,7 @@ public class OrmUtils {
         return columns;
     }
 
-    private static List<DbColumn> getAllColumn(Class<? extends  OrmEntity> entityClass) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference, WrongListReference {
+    static List<DbColumn> getAllColumn(Class<? extends  OrmEntity> entityClass) throws NotFindTableAnnotation, NotFindPrimaryKeyField, WrongRightJoinReference, WrongListReference {
         ArrayList<DbColumn> result = new ArrayList<DbColumn>();
         for(OrmField field : OrmFieldWorker.getAllAnnotationFields(entityClass))
             result.add(new DbColumn(field));
