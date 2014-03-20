@@ -40,6 +40,11 @@ public class OrmUpdater {
         OrmFactory.getDatabase().execSQL(sql);
     }
 
+    public void removeColumn(String columnName) throws NotFindTableAnnotation, WrongListReference, WrongRightJoinReference, NotFindPrimaryKeyField {
+        OrmField field = OrmFieldWorker.findAnnotationField(entityClass, columnName);
+        removeColumn(new DbColumn(field));
+    }
+
     private void removeColumn(DbColumn column) throws NotFindTableAnnotation, WrongRightJoinReference, WrongListReference, NotFindPrimaryKeyField {
         List<DbColumn> baseColumns = OrmUtils.getBaseColumns(entityClass);
         String columns_to = "";
@@ -49,6 +54,32 @@ public class OrmUpdater {
                 columns_to += ", " + new DbColumn(OrmFieldWorker.findAnnotationField(entityClass, baseColumn.getName()));
                 columns_from += ", " + baseColumn.getName();
             }
+        }
+        if (!columns_to.equals("")) {
+            columns_to = columns_to.substring(2);
+            columns_from = columns_from.substring(2);
+        }
+        int random = Long.valueOf(Math.round(1 + Math.random() * 99)).intValue();
+        String tableName = OrmTableWorker.getTableName(entityClass);
+        String new_table_name = String.format("%s_%s", tableName, random);
+        String sql = String.format("BEGIN TRANSACTION; CREATE TABLE %1$s(%2$s); INSERT INTO %1$s SELECT %3$s FROM %4$s; DROP TABLE %4$s; ALTER TABLE %1$s RENAME TO %4$s; COMMIT;", new_table_name, columns_to, columns_from, tableName);
+        OrmFactory.getDatabase().execSQL(sql);
+    }
+
+    public void renameColumn(String oldColumnName, String newColumnName) throws NotFindTableAnnotation, WrongRightJoinReference, WrongListReference, NotFindPrimaryKeyField {
+        List<DbColumn> baseColumns = OrmUtils.getBaseColumns(entityClass);
+        String columns_to = "";
+        String columns_from = "";
+        for (DbColumn baseColumn : baseColumns) {
+            OrmField field;
+            if (baseColumn.getName().equals(oldColumnName)) {
+                field = OrmFieldWorker.findAnnotationField(entityClass, newColumnName);
+                columns_to += ", " + new DbColumn(newColumnName, DbColumn.getColumnType(field), DbColumn.getColumnAdditional(field));
+            } else {
+                field = OrmFieldWorker.findAnnotationField(entityClass, baseColumn.getName());
+                columns_to += ", " + new DbColumn(field);
+            }
+            columns_from += ", " + baseColumn.getName();
         }
         if (!columns_to.equals("")) {
             columns_to = columns_to.substring(2);
