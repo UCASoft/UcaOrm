@@ -46,12 +46,6 @@ public class MyApplication extends Application {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void onTerminate() {
-        OrmFactory.ReleaseHelper();
-        super.onTerminate();
-    }
 }
 ```
 
