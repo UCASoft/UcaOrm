@@ -8,9 +8,9 @@ This is new generation orm for Android.
 
 * Put the JAR in the **libs** subfolder of your Android project
 
-### 2. Create application classes
+### 2. Creating application classes
 
-#### 2.1 Create support classes
+#### 2.1 Creating support classes
 
 ``` java
 public class DataBaseHelper extends OrmHelper {
@@ -46,16 +46,10 @@ public class MyApplication extends Application {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void onTerminate() {
-        OrmFactory.ReleaseHelper();
-        super.onTerminate();
-    }
 }
 ```
 
-#### 2.2 Create object model
+#### 2.2 Creating object model
 
 ``` java
     public class BaseEntity extends OrmEntity {
@@ -121,9 +115,9 @@ public class MyApplication extends Application {
 </manifest>
 ```
 
-### 4. Work with ORM
+### 4. Working with ORM
 
-#### 4.1 Create tables
+#### 4.1 Creating tables
 
 Add code to **onCreate** method in DataBaseHelper
 
@@ -140,7 +134,7 @@ Add code to **onCreate** method in DataBaseHelper
     }
 ```
 
-#### 4.2 Add default values
+#### 4.2 Adding default values
 
 Add code to **getDefaultValues** method in DataBaseHelper
 
@@ -153,7 +147,7 @@ Add code to **getDefaultValues** method in DataBaseHelper
     }
 ```
 
-#### 4.3 Select all entity instances
+#### 4.3 Selecting all entity instances
 
 Add **getAllCarTypes** method in CarType
 
@@ -168,9 +162,9 @@ Add **getAllCarTypes** method in CarType
     }
 ```
 
-#### 4.4 Create, insert and update instance
+#### 4.4 Creating, inserting and updating instance
 
-##### 4.4.1 Create Car instance
+##### 4.4.1 Creating Car instance
 
 ###### Create
 
@@ -191,9 +185,9 @@ Add **getAllCarTypes** method in CarType
     car.alter();
 ```
 
-##### 4.4.2 Update Car instance
+##### 4.4.2 Updating Car instance
 
-###### Change Car data
+###### Changed Car data
 
 ``` java
     car.setEnginePower(120);
@@ -202,13 +196,13 @@ Add **getAllCarTypes** method in CarType
 
 ###### Update
 
-Now just
+And now also
 
 ``` java
     car.alter();
 ```
 
-##### 4.4.3 Create Track instance
+##### 4.4.3 Creating Track instance
 
 ``` java
     Truck truck = new Truck();
@@ -223,9 +217,9 @@ Now just
     truck.alter();
 ```
 
-#### 4.5 Select instances with and without child instances
+#### 4.5 Selecting instances with and without child instances
 
-##### Select with child instances
+##### Selecting with child instances
 
 ``` java
     public static List<Car> getAllCars() {
@@ -238,7 +232,7 @@ Now just
     }
 ```
 
-##### Select without child instances
+##### Selecting without child instances
 
 ``` java
     public static List<Car> getCarsWithoutTrucks() {
@@ -251,9 +245,9 @@ Now just
     }
 ```
 
-#### 4.6 Where select
+#### 4.6 Selecting with condition
 
-Created in Car Where method
+Create in Car Where method
 
 ``` java
     public static OrmWhere Where(){
@@ -261,13 +255,13 @@ Created in Car Where method
     }
 ```
 
-Will select all cars where engine power equals **120**
+Will select all cars where engine power is equals **120**
 
 ``` java
     List<Car> cars = Car.Where().Equals("engine_power", 120).Select();
 ```
 
-Will select all cars where engine power equals **120** and doors count equals **4**
+Will select all cars where engine power is equals **120** and doors count is equals **4**
 
 ``` java
     List<Car> cars = Car.Where().Equals("engine_power", 120).And().Equals("doors_count", 4).Select();
@@ -279,7 +273,7 @@ Will select one car who have **Pirlin** wheel
     Car car = Car.Where().FindChild(Wheel.class, new OrmWhere(Wheel.class).Equals("manufacturer", "Pirlin")).SelectFirst();
 ```
 
-#### 4.7 Update model
+#### 4.7 Updating model
 
 Add to Car class new field **maxSpeed** and remove field **doorsCount**
 
@@ -313,7 +307,7 @@ Change database version in the manifest to 2
 </manifest>
 ```
 
-Add code to **onUpdate** method in DataBaseHelper. You cad write once this:
+Add code to **onUpdate** method in DataBaseHelper. You can write once this:
 
 ``` java
     protected void onUpgrade(int oldVersion, int newVersion) {
@@ -327,7 +321,7 @@ Add code to **onUpdate** method in DataBaseHelper. You cad write once this:
     }
 ```
 
-But! You can help orm do his work! And also, if need add to new field default value:
+But! You can help orm do his work! And also, if need to add to new field default value:
 
 ``` java
     protected void onUpgrade(int oldVersion, int newVersion) {
