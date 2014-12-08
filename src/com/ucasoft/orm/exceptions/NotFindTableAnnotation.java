@@ -10,6 +10,6 @@ import com.ucasoft.orm.OrmEntity;
  */
 public class NotFindTableAnnotation extends Exception {
     public NotFindTableAnnotation(Class<? extends OrmEntity> entityClass) {
-        super(String.format("Class %s need have @Table annotation!", entityClass.getSimpleName()));
+        super(String.format("Class %s need to have @Table annotation!", entityClass.getSimpleName()));
     }
 }

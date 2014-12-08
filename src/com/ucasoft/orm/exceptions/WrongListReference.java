@@ -8,6 +8,6 @@ package com.ucasoft.orm.exceptions;
  */
 public class WrongListReference extends Exception {
     public WrongListReference(Class listClass, Class entityClass) {
-        super(String.format("Not find in class %s reference to %s!", listClass.getSimpleName(), entityClass.getSimpleName()));
+        super(String.format("Not found in class %s reference to %s!", listClass.getSimpleName(), entityClass.getSimpleName()));
     }
 }

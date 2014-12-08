@@ -10,6 +10,6 @@ import com.ucasoft.orm.OrmEntity;
  */
 public class WrongJoinLeftReference extends Exception {
     public WrongJoinLeftReference(Class<? extends OrmEntity> rightClass, Class<? extends OrmEntity> entityClass) {
-        super(String.format("Need add %s class to leftJoin annotation class %s!", rightClass.getSimpleName(), entityClass.getSimpleName()));
+        super(String.format("Need to add %s class to leftJoin annotation %s class!", rightClass.getSimpleName(), entityClass.getSimpleName()));
     }
 }

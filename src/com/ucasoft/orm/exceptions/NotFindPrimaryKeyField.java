@@ -8,6 +8,6 @@ package com.ucasoft.orm.exceptions;
  */
 public class NotFindPrimaryKeyField extends Exception {
     public NotFindPrimaryKeyField(Class entityClass) {
-        super(String.format("In class %s not find primary key field!", entityClass.getSimpleName()));
+        super(String.format("In class %s not found primary key field!", entityClass.getSimpleName()));
     }
 }
