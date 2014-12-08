@@ -1,7 +1,7 @@
 package com.ucasoft.orm.annotations;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 03.07.13
  * Time: 16:36

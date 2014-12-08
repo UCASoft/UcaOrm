@@ -25,7 +25,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 27.06.13
  * Time: 9:26

@@ -10,9 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
- * Date:
+ * Date: 10.07.13
  * Time: 15:40
  */
 class OrmTableWorker {

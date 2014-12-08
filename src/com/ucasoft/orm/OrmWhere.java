@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 11.07.13
  * Time: 16:19

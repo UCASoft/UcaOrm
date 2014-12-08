@@ -3,7 +3,7 @@ package com.ucasoft.orm.exceptions;
 import com.ucasoft.orm.OrmEntity;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 17.07.13
  * Time: 21:28

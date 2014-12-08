@@ -8,8 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created with IntelliJ IDEA.
- * User: UCASoft
+ * Created by UCASoft.
+ * User: Antonov Sergey
  * Date: 30.03.13
  * Time: 22:52
  */

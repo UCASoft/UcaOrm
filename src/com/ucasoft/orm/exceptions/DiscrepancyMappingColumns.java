@@ -4,7 +4,7 @@ import com.ucasoft.orm.OrmEntity;
 import com.ucasoft.orm.OrmField;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 01.07.13
  * Time: 12:33

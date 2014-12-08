@@ -1,7 +1,7 @@
 package com.ucasoft.orm.exceptions;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 27.06.13
  * Time: 17:16

@@ -5,7 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
+ * User: Antonov Sergey
  * Date: 22.01.13
  * Time: 21:56
  */

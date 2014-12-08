@@ -7,8 +7,8 @@ import com.ucasoft.orm.exceptions.NotFindTableAnnotation;
 import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
 /**
- * Created with IntelliJ IDEA.
- * User: UCASoft
+ * Created with by UCASoft.
+ * User: Antonov Sergey
  * Date: 30.06.13
  * Time: 13:08
  */

@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 
 /**
- * Created by UCASoft with IntelliJ IDEA.
+ * Created by UCASoft.
  * User: Antonov Sergey
  * Date: 12.07.13
  * Time: 13:09
