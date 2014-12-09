@@ -71,6 +71,11 @@ public class OrmUtils {
         return rowDeleted == 1;
     }
 
+    static boolean alterInTransaction(OrmEntity entity) throws WrongRightJoinReference, NotFindTableAnnotation, IllegalAccessException, WrongListReference {
+        SQLiteDatabase database = OrmFactory.getDatabase();
+        return alter(entity, database);
+    }
+
     static boolean alter(OrmEntity entity) throws WrongRightJoinReference, NotFindTableAnnotation, IllegalAccessException, WrongListReference {
         SQLiteDatabase database = OrmFactory.getDatabase();
         database.beginTransaction();

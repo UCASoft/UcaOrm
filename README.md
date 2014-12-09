@@ -202,7 +202,33 @@ And now also
     car.alter();
 ```
 
-##### 4.4.3 Creating Track instance
+##### 4.4.3 Create or Update many instance
+
+If you have list of entities, you can insert/update them in one transaction.
+
+``` java
+    OrmTransaction.WorkInTransaction(new OrmTransaction.Worker() {
+        @Override
+        public boolean work() {
+            boolean success = true;
+            for (Car car : cars){
+                try {
+                    if (!OrmEntity.alterInTransaction(car))
+                    {
+                        success = false;
+                        break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    success = false;
+                }
+            }
+            return success;
+        }
+    });
+```
+
+##### 4.4.4 Creating Track instance
 
 ``` java
     Truck truck = new Truck();

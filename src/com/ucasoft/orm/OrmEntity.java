@@ -29,6 +29,10 @@ public abstract class OrmEntity {
         return OrmUtils.alter(this);
     }
 
+    public static boolean alterInTransaction(OrmEntity entity) throws WrongListReference, WrongRightJoinReference, IllegalAccessException, NotFindTableAnnotation {
+        return OrmUtils.alterInTransaction(entity);
+    }
+
     protected boolean delete() throws IllegalAccessException, WrongRightJoinReference, NotFindPrimaryKeyField, NotFindTableAnnotation {
         return OrmUtils.delete(this);
     }
