@@ -412,7 +412,13 @@ public class OrmUtils {
         Class<?> type = field.getType();
         if (type.isArray()) {
             if (type.getComponentType().isPrimitive()) {
-                String[] items = cursor.getString(cursorIndex).split(",");
+                String[] items;
+                String itemsStr = cursor.getString(cursorIndex);
+                if(!itemsStr.equals("")) {
+                    items = itemsStr.split(",");
+                } else {
+                    items = new String[0];
+                }
                 Object result = null;
                 String componentName = type.getComponentType().getSimpleName().toUpperCase();
                 if (componentName.equals("INT"))
