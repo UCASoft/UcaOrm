@@ -5,6 +5,7 @@ import com.ucasoft.orm.exceptions.NotFindTableAnnotation;
 import com.ucasoft.orm.exceptions.WrongListReference;
 import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -131,7 +132,8 @@ class OrmFieldWorker {
     private static List<OrmField> getForeign(Class<? extends OrmEntity> entityClass) throws WrongListReference {
         ArrayList<OrmField> result = new ArrayList<OrmField>();
         for (Field field : entityClass.getDeclaredFields()){
-            if (checkForeign(entityClass, field))
+            Column columnAnnotation = field.getAnnotation(Column.class);
+            if (columnAnnotation != null && checkForeign(entityClass, field))
                 result.add(new OrmField(field));
         }
         return result;
