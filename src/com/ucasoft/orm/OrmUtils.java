@@ -176,25 +176,40 @@ public class OrmUtils {
                     }
                 } else {
                     String fieldType = type.getSimpleName().toUpperCase();
-                    if (fieldType.equals("INT"))
-                        values.put(columnName, field.getInt(entity));
-                    else if (fieldType.equals("LONG"))
-                        values.put(columnName, (Long) field.get(entity));
-                    else if (fieldType.equals("DATE"))
-                        values.put(columnName, ((Date) field.get(entity)).getTime());
-                    else if (fieldType.equals("BOOLEAN"))
-                        values.put(columnName, ((Boolean) field.get(entity)) ? 1 : 0);
-                    else if (fieldType.equals("STRING"))
-                        values.put(columnName, (String) field.get(entity));
-                    else if (fieldType.equals("DOUBLE"))
-                        values.put(columnName, field.getDouble(entity));
-                    else if (fieldType.equals("DRAWABLE")) {
-                        Bitmap bitmap = ((BitmapDrawable) field.get(entity)).getBitmap();
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                        values.put(columnName, stream.toByteArray());
-                    } else if (fieldType.equals("DOCUMENT"))
-                        values.put(columnName, getStringFromDocument((Document) field.get(entity)));
+                    switch (fieldType) {
+                        case "LIST":
+                            values.put(columnName, field.getList(entity));
+                            break;
+                        case "INT":
+                            values.put(columnName, field.getInt(entity));
+                            break;
+                        case "LONG":
+                            values.put(columnName, (Long) field.get(entity));
+                            break;
+                        case "DATE":
+                            values.put(columnName, ((Date) field.get(entity)).getTime());
+                            break;
+                        case "BOOLEAN":
+                            values.put(columnName, ((Boolean) field.get(entity)) ? 1 : 0);
+                            break;
+                        case "STRING":
+                            values.put(columnName, (String) field.get(entity));
+                            break;
+                        case "DOUBLE":
+                            values.put(columnName, field.getDouble(entity));
+                            break;
+                        case "DRAWABLE":
+                            Bitmap bitmap = ((BitmapDrawable) field.get(entity)).getBitmap();
+                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            values.put(columnName, stream.toByteArray());
+                            break;
+                        case "DOCUMENT":
+                            values.put(columnName, getStringFromDocument((Document) field.get(entity)));
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
@@ -431,25 +446,45 @@ public class OrmUtils {
             }
         } else {
             String fieldType = type.getSimpleName().toUpperCase();
-            if (fieldType.equals("INT"))
-                return cursor.getInt(cursorIndex);
-            else if (fieldType.equals("LONG"))
-                return cursor.getLong(cursorIndex);
-            else if (fieldType.equals("DATE"))
-                return new Date(cursor.getLong(cursorIndex));
-            else if (fieldType.equals("BOOLEAN"))
-                return cursor.getInt(cursorIndex) == 1;
-            else if (fieldType.equals("STRING"))
-                return cursor.getString(cursorIndex);
-            else if (fieldType.equals("DOUBLE")) {
-                String value = cursor.getString(cursorIndex);
-                if (value != null)
-                    return Double.valueOf(value);
-            } else if (fieldType.equals("DRAWABLE")) {
-                byte[] bytes = cursor.getBlob(cursorIndex);
-                return new BitmapDrawable(null, BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
-            } else if (fieldType.equals("DOCUMENT"))
-                return getDocumentFromString(cursor.getString(cursorIndex));
+            switch (fieldType) {
+                case "LIST":
+                    List result;
+                    switch (field.getTypeOfListItems().getSimpleName().toUpperCase()) {
+                        case "INTEGER":
+                            String itemsStr = cursor.getString(cursorIndex);
+                            if(itemsStr.equals("")) {
+                                result = new ArrayList<Integer>();
+                            } else {
+                                String[] items = itemsStr.split(",");
+                                result = new ArrayList<Integer>(items.length);
+                                for(String item : items) {
+                                    result.add(Integer.parseInt(item.trim()));
+                                }
+                            }
+                            return result;
+                    }
+                    return null;
+                case "INT":
+                    return cursor.getInt(cursorIndex);
+                case "LONG":
+                    return cursor.getLong(cursorIndex);
+                case "DATE":
+                    return new Date(cursor.getLong(cursorIndex));
+                case "BOOLEAN":
+                    return cursor.getInt(cursorIndex) == 1;
+                case "STRING":
+                    return cursor.getString(cursorIndex);
+                case "DOUBLE":
+                    String value = cursor.getString(cursorIndex);
+                    if (value != null)
+                        return Double.valueOf(value);
+                    break;
+                case "DRAWABLE":
+                    byte[] bytes = cursor.getBlob(cursorIndex);
+                    return new BitmapDrawable(null, BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                case "DOCUMENT":
+                    return getDocumentFromString(cursor.getString(cursorIndex));
+            }
         }
         return null;
     }

@@ -45,7 +45,7 @@ class DbColumn {
         String fieldType = type.getSimpleName().toUpperCase();
         if (fieldType.equals("INT") || fieldType.equals("LONG") || fieldType.equals("DATE") || fieldType.equals("BOOLEAN") || isReferenceField(field))
             return "INTEGER";
-        if (fieldType.equals("STRING") || fieldType.equals("DOCUMENT"))
+        if (fieldType.equals("STRING") || fieldType.equals("DOCUMENT") || fieldType.equals("LIST"))
             return "TEXT";
         if (fieldType.equals("DOUBLE"))
             return "REAL";
