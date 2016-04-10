@@ -1,6 +1,6 @@
 # UcaOrm
 
-This is new generation orm for Android.
+This is a new generation orm for Android.
 
 ## Get start
 
@@ -49,7 +49,7 @@ public class MyApplication extends Application {
 }
 ```
 
-#### 2.2 Creating object model
+#### 2.2 Creating an object model
 
 ``` java
     public class BaseEntity extends OrmEntity {
@@ -162,7 +162,7 @@ Add **getAllCarTypes** method in CarType
     }
 ```
 
-#### 4.4 Creating, inserting and updating instance
+#### 4.4 Creating, inserting and updating the instance
 
 ##### 4.4.1 Creating Car instance
 
@@ -196,15 +196,15 @@ Add **getAllCarTypes** method in CarType
 
 ###### Update
 
-And now also
+And now just
 
 ``` java
     car.alter();
 ```
 
-##### 4.4.3 Create or Update many instance
+##### 4.4.3 Create or Update many instances
 
-If you have list of entities, you can insert/update them in one transaction.
+If you have list of entities, you can insert/update it's items in an one transaction.
 
 ``` java
     OrmTransaction.WorkInTransaction(new OrmTransaction.Worker() {
@@ -281,19 +281,19 @@ Create in Car Where method
     }
 ```
 
-Will select all cars where engine power is equals **120**
+Will select all cars where an engine power is equals **120**
 
 ``` java
     List<Car> cars = Car.Where().Equals("engine_power", 120).Select();
 ```
 
-Will select all cars where engine power is equals **120** and doors count is equals **4**
+Will select all cars where an engine power is equals **120** and a doors number is equals **4**
 
 ``` java
     List<Car> cars = Car.Where().Equals("engine_power", 120).And().Equals("doors_count", 4).Select();
 ```
 
-Will select one car who have **Pirlin** wheel
+Will select one car who has the **Pirlin** wheel
 
 ``` java
     Car car = Car.Where().FindChild(Wheel.class, new OrmWhere(Wheel.class).Equals("manufacturer", "Pirlin")).SelectFirst();
@@ -301,7 +301,7 @@ Will select one car who have **Pirlin** wheel
 
 #### 4.7 Updating model
 
-Add to Car class new field **maxSpeed** and remove field **doorsCount**
+Add to Car class a new field **maxSpeed** and remove the field **doorsCount**
 
 ``` java
     @Table(rightJoinTo = {Truck.class})
@@ -321,7 +321,7 @@ Add to Car class new field **maxSpeed** and remove field **doorsCount**
     }
 ```
 
-Change database version in the manifest to 2
+Change the database version in the manifest to 2
 
 ``` xml
 <manifest>
@@ -333,7 +333,7 @@ Change database version in the manifest to 2
 </manifest>
 ```
 
-Add code to **onUpdate** method in DataBaseHelper. You can write once this:
+Add code to **onUpdate** method in DataBaseHelper. You can write only this:
 
 ``` java
     protected void onUpgrade(int oldVersion, int newVersion) {
@@ -347,7 +347,7 @@ Add code to **onUpdate** method in DataBaseHelper. You can write once this:
     }
 ```
 
-But! You can help orm do his work! And also, if need to add to new field default value:
+But! You can help orm do his work! And also, if need to add to the new field the default value:
 
 ``` java
     protected void onUpgrade(int oldVersion, int newVersion) {
