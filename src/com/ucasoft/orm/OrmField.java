@@ -7,7 +7,9 @@ import com.ucasoft.orm.exceptions.WrongRightJoinReference;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * Created by UCASoft.
@@ -129,6 +131,14 @@ public final class OrmField {
         return null;
     }
 
+    public Class<?> getTypeOfListItems() {
+        if(field != null) {
+            ParameterizedType listType = (ParameterizedType) field.getGenericType();
+            return (Class<?>) listType.getActualTypeArguments()[0];
+        }
+        return null;
+    }
+
     public int getInt(OrmEntity entity) throws IllegalAccessException {
         if (field != null)
             return field.getInt(entity);
@@ -142,6 +152,19 @@ public final class OrmField {
                 return Double.valueOf(value.toString());
             else
                 return null;
+        }
+        throw new IllegalAccessException();
+    }
+
+    public String getList(OrmEntity entity) throws IllegalAccessException {
+        if(field != null) {
+            String result = "";
+            List value = (List) field.get(entity);
+            if(value != null) {
+                result = value.toString();
+                result = result.substring(1, result.length() - 1);
+            }
+            return result;
         }
         throw new IllegalAccessException();
     }

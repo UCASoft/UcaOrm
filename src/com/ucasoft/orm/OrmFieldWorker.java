@@ -154,8 +154,8 @@ class OrmFieldWorker {
                 }
                 if (!okReference)
                     throw new WrongListReference(itemType, parentClass);
+                return true;
             }
-            return true;
         }
         return false;
     }
